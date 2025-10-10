@@ -324,31 +324,39 @@ class TestDaltonismoCompleto:
         """Configura la UI para el test de colores"""
         self.main_frame = tk.Frame(self.root, bg="white")
         
+        # Configurar distribución vertical para usar toda la altura
+        self.main_frame.grid_rowconfigure(0, weight=1)  # Título
+        self.main_frame.grid_rowconfigure(1, weight=3)  # Texto principal (más espacio)
+        self.main_frame.grid_rowconfigure(2, weight=1)  # Contador
+        self.main_frame.grid_rowconfigure(3, weight=4)  # Botones (más espacio)
+        self.main_frame.grid_rowconfigure(4, weight=2)  # Espacio final
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
         # Título del test - Escalado automático
         self.test_title = tk.Label(
             self.main_frame, text=" Test de Colores Básicos", 
             font=("Arial", self.fonts['title'], "bold"),
             fg="#2196F3", bg="white"
         )
-        self.test_title.pack(pady=self.spacing['medium'])
+        self.test_title.grid(row=0, column=0, sticky="nsew", pady=self.spacing['medium'])
         
         # Texto principal - Escalado automático
         self.label = tk.Label(
             self.main_frame, text="", font=("Arial", self.fonts['main_text'], "bold"),
             fg="black", bg="white"
         )
-        self.label.pack(pady=self.spacing['large'])
+        self.label.grid(row=1, column=0, sticky="nsew", pady=self.spacing['large'])
         
         # Contador - Escalado automático
         self.counter_label = tk.Label(
             self.main_frame, text="", font=("Arial", self.fonts['counter']),
             fg="gray", bg="white"
         )
-        self.counter_label.pack(pady=self.spacing['small'])
+        self.counter_label.grid(row=2, column=0, sticky="nsew", pady=self.spacing['small'])
         
         # Botones de colores
         self.buttons_frame = tk.Frame(self.main_frame, bg="white")
-        self.buttons_frame.pack(pady=self.spacing['large'])
+        self.buttons_frame.grid(row=3, column=0, sticky="nsew", pady=self.spacing['large'])
         
         self.color_buttons = {}
         for color_name, hex_code in colors.items():
@@ -682,9 +690,19 @@ class TestDaltonismoCompleto:
             except:
                 pass
             
-            # Frame de resultados
+            # Frame de resultados con distribución vertical completa
             results_frame = tk.Frame(self.root, bg="white")
             results_frame.pack(expand=True, fill=tk.BOTH)
+            
+            # Configurar distribución vertical para usar toda la altura
+            results_frame.grid_rowconfigure(0, weight=1)  # Espaciado superior
+            results_frame.grid_rowconfigure(1, weight=2)  # Título
+            results_frame.grid_rowconfigure(2, weight=2)  # Resultado colores
+            results_frame.grid_rowconfigure(3, weight=2)  # Resultado Ishihara
+            results_frame.grid_rowconfigure(4, weight=3)  # Evaluación
+            results_frame.grid_rowconfigure(5, weight=2)  # Botón reinicio
+            results_frame.grid_rowconfigure(6, weight=1)  # Espaciado inferior
+            results_frame.grid_columnconfigure(0, weight=1)
         
             # Título - Escalado adaptativo
             title = tk.Label(
@@ -692,7 +710,7 @@ class TestDaltonismoCompleto:
                 font=("Arial", self.fonts['title'], "bold"),
                 fg="#2196F3", bg="white"
             )
-            title.pack(pady=self.spacing['large'])
+            title.grid(row=1, column=0, sticky="nsew", pady=self.spacing['large'])
         
             # Resultados del test de colores - Escalado adaptativo
             color_percentage = (self.color_score / self.color_attempts) * 100
@@ -702,7 +720,7 @@ class TestDaltonismoCompleto:
                 font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
                 bg="white"
             )
-            color_result.pack(pady=self.spacing['medium'])
+            color_result.grid(row=2, column=0, sticky="nsew", pady=self.spacing['medium'])
             
             # Resultados del test de Ishihara - Escalado adaptativo
             if self.ishihara_attempts > 0:
@@ -713,7 +731,7 @@ class TestDaltonismoCompleto:
                     font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
                     bg="white"
                 )
-                ishihara_result.pack(pady=self.spacing['medium'])
+                ishihara_result.grid(row=3, column=0, sticky="nsew", pady=self.spacing['medium'])
             
             # Evaluación general
             total_score = self.color_score + self.ishihara_score
@@ -742,7 +760,7 @@ class TestDaltonismoCompleto:
                 results_frame, text=evaluation,
                 font=("Arial", self.fonts['button'], "bold"), fg=eval_color, bg="white"
             )
-            eval_label.pack(pady=self.spacing['large'])
+            eval_label.grid(row=4, column=0, sticky="nsew", pady=self.spacing['large'])
             
             # Botón para reiniciar - Escalado adaptativo, sin colores
             restart_btn = tk.Button(
@@ -751,7 +769,7 @@ class TestDaltonismoCompleto:
                 width=self.button_sizes['large_width'], height=self.button_sizes['height'], cursor="hand2",
                 command=self.restart_test
             )
-            restart_btn.pack(pady=self.spacing['large'])
+            restart_btn.grid(row=5, column=0, sticky="ew", pady=self.spacing['large'])
             
             # Actualizar indicador
             self.test_indicator.config(text=" Test Completado")
