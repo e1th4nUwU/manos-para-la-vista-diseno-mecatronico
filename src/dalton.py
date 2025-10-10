@@ -91,7 +91,6 @@ class TestDaltonismoCompleto:
         # Configuraciones múltiples para asegurar pantalla completa en Raspberry Pi
         self.root.attributes('-fullscreen', True)
         self.root.attributes('-topmost', True)  # Mantener siempre encima
-        self.root.state('zoomed')  # Maximizar ventana
         
         # Configuración de la ventana
         self.root.configure(bg="white")
@@ -917,10 +916,8 @@ class TestDaltonismoCompleto:
         self.root.attributes('-fullscreen', not current_state)
         if not current_state:  # Si estamos entrando a pantalla completa
             self.root.attributes('-topmost', True)
-            try:
-                self.root.state('zoomed')
-            except:
-                pass  # Algunos sistemas no soportan 'zoomed'
+            # Forzar geometría de pantalla completa
+            self.root.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
         
     def run(self):
         """Ejecuta la aplicación"""
