@@ -87,9 +87,16 @@ class TestDaltonismoCompleto:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Test de Daltonismo Completo")
+        
+        # Configuraciones múltiples para asegurar pantalla completa en Raspberry Pi
         self.root.attributes('-fullscreen', True)
+        self.root.attributes('-topmost', True)  # Mantener siempre encima
+        self.root.state('zoomed')  # Maximizar ventana
+        
+        # Configuración de la ventana
         self.root.configure(bg="white")
         self.root.bind('<Escape>', lambda e: self.root.quit())
+        self.root.bind('<F11>', lambda e: self.toggle_fullscreen())  # F11 para alternar pantalla completa
         
         # Detectar tamaño de pantalla y calcular escalado automático
         self.screen_width = self.root.winfo_screenwidth()
@@ -184,6 +191,9 @@ class TestDaltonismoCompleto:
         self.button_sizes = {
             'color_width': max(6, int(8 * self.scale_factor)),
             'color_height': max(2, int(3 * self.scale_factor)),
+            'width': max(3, int(4 * self.scale_factor)),
+            'height': max(1, int(2 * self.scale_factor)),
+            'large_width': max(12, int(15 * self.scale_factor)),
             'option_width': max(10, int(12 * self.scale_factor)),
             'option_height': max(1, int(2 * self.scale_factor)),
             'restart_width': max(12, int(15 * self.scale_factor)),
@@ -345,15 +355,14 @@ class TestDaltonismoCompleto:
         for color_name, hex_code in colors.items():
             btn = tk.Button(
                 self.buttons_frame, 
-                text=color_name,  # Mostrar el nombre completo del color
+                text="",  # Sin texto, solo el color
                 width=self.button_sizes['color_width'], 
                 height=self.button_sizes['color_height'],
                 command=lambda c=color_name: self.check_color_answer_with_animation(c),
                 bd=3, relief="raised", 
                 cursor="hand2", 
-                font=("Arial", self.fonts['button'], "bold"), 
-                bg="#f0f0f0", fg="black",  # Sin color para hacer el test válido
-                activebackground="#e0e0e0"
+                bg=hex_code,  # El botón es del color que representa
+                activebackground=hex_code
             )
             btn.pack(side=tk.LEFT, padx=15, pady=15)
             self.color_buttons[color_name] = btn
@@ -431,7 +440,7 @@ class TestDaltonismoCompleto:
         
         # Mostrar frame de colores
         self.ishihara_frame.pack_forget()
-        self.main_frame.pack(expand=True)
+        self.main_frame.pack(expand=True, fill=tk.BOTH)
         
         # Resetear variables
         self.color_attempt = 0
@@ -480,7 +489,7 @@ class TestDaltonismoCompleto:
         
         # Cambiar a frame de Ishihara
         self.main_frame.pack_forget()
-        self.ishihara_frame.pack(expand=True)
+        self.ishihara_frame.pack(expand=True, fill=tk.BOTH)
         
         # Resetear variables
         self.ishihara_attempt = 0
@@ -639,19 +648,20 @@ class TestDaltonismoCompleto:
         if chosen_color == self.current_color_name:
             self.color_score += 1
         
-        # Efecto visual
+        # Efecto visual neutral - mantener colores del botón
         btn = self.color_buttons[chosen_color]
-        original_bg = btn['bg']
         
         if chosen_color == self.current_color_name:
-            btn.config(relief="solid", bd=5)
+            # Correcto: borde más grueso y sólido
+            btn.config(relief="solid", bd=6)
         else:
-            btn.config(bg="#FF6B6B", relief="solid", bd=5)
+            # Incorrecto: borde punteado para indicar error
+            btn.config(relief="groove", bd=6)
         
         self.animate_button_press(btn)
         
         # Restaurar estado original - Más rápido para Raspberry Pi
-        self.root.after(400, lambda: btn.config(bg=original_bg, relief="raised", bd=3))
+        self.root.after(400, lambda: btn.config(relief="raised", bd=3))
         
         # Avanzar - Delay reducido para mejor fluidez
         self.color_attempt += 1
@@ -675,7 +685,7 @@ class TestDaltonismoCompleto:
             
             # Frame de resultados
             results_frame = tk.Frame(self.root, bg="white")
-            results_frame.pack(expand=True)
+            results_frame.pack(expand=True, fill=tk.BOTH)
         
             # Título - Escalado adaptativo
             title = tk.Label(
@@ -756,7 +766,7 @@ class TestDaltonismoCompleto:
                         widget.pack_forget()
                 
                 error_frame = tk.Frame(self.root, bg="white")
-                error_frame.pack(expand=True)
+                error_frame.pack(expand=True, fill=tk.BOTH)
                 
                 error_label = tk.Label(error_frame, text="Test Completado\n(Error al mostrar resultados detallados)", 
                                      font=("Arial", 24), fg="black", bg="white")
@@ -901,9 +911,23 @@ class TestDaltonismoCompleto:
             GPIO.cleanup()
             print("[OK] GPIO y servo limpiados")
     
+    def toggle_fullscreen(self):
+        """Alternar entre pantalla completa y ventana"""
+        current_state = self.root.attributes('-fullscreen')
+        self.root.attributes('-fullscreen', not current_state)
+        if not current_state:  # Si estamos entrando a pantalla completa
+            self.root.attributes('-topmost', True)
+            try:
+                self.root.state('zoomed')
+            except:
+                pass  # Algunos sistemas no soportan 'zoomed'
+        
     def run(self):
         """Ejecuta la aplicación"""
         try:
+            # Forzar actualización de geometría para pantalla completa
+            self.root.update_idletasks()
+            self.root.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
             self.root.protocol("WM_DELETE_WINDOW", self.cleanup)
             self.root.mainloop()
         finally:
