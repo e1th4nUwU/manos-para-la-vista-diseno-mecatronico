@@ -685,48 +685,48 @@ class TestDaltonismoCompleto:
             )
             title.pack(pady=self.spacing['large'])
         
-        # Resultados del test de colores - Escalado adaptativo
-        color_percentage = (self.color_score / self.color_attempts) * 100
-        color_result = tk.Label(
-            results_frame, 
-            text=f" Colores: {self.color_score}/{self.color_attempts} ({color_percentage:.1f}%)",
-            font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
-            bg="white"
-        )
-        color_result.pack(pady=self.spacing['medium'])
-        
-        # Resultados del test de Ishihara - Escalado adaptativo
-        if self.ishihara_attempts > 0:
-            ishihara_percentage = (self.ishihara_score / self.ishihara_attempts) * 100
-            ishihara_result = tk.Label(
-                results_frame,
-                text=f" Ishihara: {self.ishihara_score}/{self.ishihara_attempts} ({ishihara_percentage:.1f}%)",
-                font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
+            # Resultados del test de colores - Escalado adaptativo
+            color_percentage = (self.color_score / self.color_attempts) * 100
+            color_result = tk.Label(
+                results_frame, 
+                text=f" Colores: {self.color_score}/{self.color_attempts} ({color_percentage:.1f}%)",
+                font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
                 bg="white"
             )
-            ishihara_result.pack(pady=self.spacing['medium'])
-        
-        # Evaluación general
-        total_score = self.color_score + self.ishihara_score
-        total_possible = self.color_attempts + self.ishihara_attempts
-        overall_percentage = (total_score / total_possible) * 100 if total_possible > 0 else 0
-        
-        # CONTROL DEL SERVO SEGÚN RESULTADO
-        is_satisfactory = overall_percentage >= 75  # Umbral para resultado satisfactorio
-        print(f"[RESULTADO] Puntuacion: {overall_percentage:.1f}% - {'SATISFACTORIO' if is_satisfactory else 'INSATISFACTORIO'}")
-        
-        # Mover servo según resultado
-        self.root.after(1000, lambda: self.move_servo_result(is_satisfactory))
-        
-        if overall_percentage >= 85:
-            evaluation = "[OK] Vision cromatica normal"
-            eval_color = "#4CAF50"
-        elif overall_percentage >= 65:
-            evaluation = "[ATENCION] Posible deficiencia leve"
-            eval_color = "#FF9800"
-        else:
-            evaluation = "[ERROR] Se recomienda consulta oftalmologica"
-            eval_color = "#F44336"
+            color_result.pack(pady=self.spacing['medium'])
+            
+            # Resultados del test de Ishihara - Escalado adaptativo
+            if self.ishihara_attempts > 0:
+                ishihara_percentage = (self.ishihara_score / self.ishihara_attempts) * 100
+                ishihara_result = tk.Label(
+                    results_frame,
+                    text=f" Ishihara: {self.ishihara_score}/{self.ishihara_attempts} ({ishihara_percentage:.1f}%)",
+                    font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
+                    bg="white"
+                )
+                ishihara_result.pack(pady=self.spacing['medium'])
+            
+            # Evaluación general
+            total_score = self.color_score + self.ishihara_score
+            total_possible = self.color_attempts + self.ishihara_attempts
+            overall_percentage = (total_score / total_possible) * 100 if total_possible > 0 else 0
+            
+            # CONTROL DEL SERVO SEGÚN RESULTADO
+            is_satisfactory = overall_percentage >= 75  # Umbral para resultado satisfactorio
+            print(f"[RESULTADO] Puntuacion: {overall_percentage:.1f}% - {'SATISFACTORIO' if is_satisfactory else 'INSATISFACTORIO'}")
+            
+            # Mover servo según resultado
+            self.root.after(1000, lambda: self.move_servo_result(is_satisfactory))
+            
+            if overall_percentage >= 85:
+                evaluation = "[OK] Vision cromatica normal"
+                eval_color = "#4CAF50"
+            elif overall_percentage >= 65:
+                evaluation = "[ATENCION] Posible deficiencia leve"
+                eval_color = "#FF9800"
+            else:
+                evaluation = "[ERROR] Se recomienda consulta oftalmologica"
+                eval_color = "#F44336"
         
             # Evaluación final - Escalado adaptativo
             eval_label = tk.Label(
