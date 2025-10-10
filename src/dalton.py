@@ -173,16 +173,16 @@ class TestDaltonismoCompleto:
         # Usar el menor de los dos para mantener proporciones
         self.scale_factor = min(width_scale, height_scale)
         
-        # Definir tamaños escalados
+        # Definir tamaños escalados - texto más grande para mejor legibilidad
         self.fonts = {
-            'indicator': max(12, int(18 * self.scale_factor)),
-            'indicator_small': max(10, int(16 * self.scale_factor)),
-            'title': max(16, int(28 * self.scale_factor)),
-            'main_text': max(20, int(36 * self.scale_factor)),
-            'counter': max(12, int(20 * self.scale_factor)),
-            'button': max(10, int(16 * self.scale_factor)),
-            'button_small': max(9, int(12 * self.scale_factor)),
-            'results': max(14, int(20 * self.scale_factor)),
+            'indicator': max(14, int(22 * self.scale_factor)),
+            'indicator_small': max(12, int(18 * self.scale_factor)),
+            'title': max(16, int(28 * self.scale_factor)),  # Títulos mantienen tamaño
+            'main_text': max(24, int(42 * self.scale_factor)),  # Texto principal más grande
+            'counter': max(16, int(24 * self.scale_factor)),  # Contador más grande
+            'button': max(14, int(20 * self.scale_factor)),  # Botones más grandes
+            'button_small': max(12, int(16 * self.scale_factor)),
+            'results': max(18, int(24 * self.scale_factor)),  # Resultados más grandes
             'results_title': max(18, int(32 * self.scale_factor))
         }
         
@@ -354,14 +354,23 @@ class TestDaltonismoCompleto:
         )
         self.counter_label.grid(row=2, column=0, sticky="nsew", pady=self.spacing['small'])
         
-        # Botones de colores
+        # Botones de colores - Centrados
         self.buttons_frame = tk.Frame(self.main_frame, bg="white")
-        self.buttons_frame.grid(row=3, column=0, sticky="nsew", pady=self.spacing['large'])
+        self.buttons_frame.grid(row=3, column=0, pady=self.spacing['large'])
+        
+        # Configurar centrado de botones
+        self.buttons_frame.grid_columnconfigure(0, weight=1)  # Espacio izquierdo
+        self.buttons_frame.grid_columnconfigure(1, weight=0)  # Contenedor de botones
+        self.buttons_frame.grid_columnconfigure(2, weight=1)  # Espacio derecho
+        
+        # Frame interno para los botones
+        buttons_container = tk.Frame(self.buttons_frame, bg="white")
+        buttons_container.grid(row=0, column=1)
         
         self.color_buttons = {}
         for color_name, hex_code in colors.items():
             btn = tk.Button(
-                self.buttons_frame, 
+                buttons_container, 
                 text="",  # Sin texto, solo el color
                 width=self.button_sizes['color_width'], 
                 height=self.button_sizes['color_height'],
