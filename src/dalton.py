@@ -91,6 +91,11 @@ class TestDaltonismoCompleto:
         self.root.configure(bg="white")
         self.root.bind('<Escape>', lambda e: self.root.quit())
         
+        # Detectar tamaño de pantalla y calcular escalado automático
+        self.screen_width = self.root.winfo_screenwidth()
+        self.screen_height = self.root.winfo_screenheight()
+        self.calculate_scaling()
+        
         # Optimizaciones para Raspberry Pi
         self.root.tk_setPalette(background='white', foreground='black')
         
@@ -149,6 +154,57 @@ class TestDaltonismoCompleto:
         # Iniciar sensor
         self.start_sensor_monitoring()
     
+    def calculate_scaling(self):
+        """Calcula el escalado automático basado en el tamaño de pantalla"""
+        # Tamaño base de referencia (1024x768)
+        base_width = 1024
+        base_height = 768
+        
+        # Calcular factor de escala
+        width_scale = self.screen_width / base_width
+        height_scale = self.screen_height / base_height
+        
+        # Usar el menor de los dos para mantener proporciones
+        self.scale_factor = min(width_scale, height_scale)
+        
+        # Definir tamaños escalados
+        self.fonts = {
+            'indicator': max(12, int(18 * self.scale_factor)),
+            'indicator_small': max(10, int(16 * self.scale_factor)),
+            'title': max(16, int(28 * self.scale_factor)),
+            'main_text': max(20, int(36 * self.scale_factor)),
+            'counter': max(12, int(20 * self.scale_factor)),
+            'button': max(10, int(16 * self.scale_factor)),
+            'button_small': max(9, int(12 * self.scale_factor)),
+            'results': max(14, int(20 * self.scale_factor)),
+            'results_title': max(18, int(32 * self.scale_factor))
+        }
+        
+        # Tamaños de botones escalados
+        self.button_sizes = {
+            'color_width': max(6, int(8 * self.scale_factor)),
+            'color_height': max(2, int(3 * self.scale_factor)),
+            'option_width': max(10, int(12 * self.scale_factor)),
+            'option_height': max(1, int(2 * self.scale_factor)),
+            'restart_width': max(12, int(15 * self.scale_factor)),
+            'restart_height': max(1, int(2 * self.scale_factor))
+        }
+        
+        # Espaciado escalado
+        self.spacing = {
+            'small': max(3, int(8 * self.scale_factor)),
+            'medium': max(8, int(15 * self.scale_factor)),
+            'large': max(15, int(25 * self.scale_factor)),
+            'frame_height': max(60, int(80 * self.scale_factor))
+        }
+        
+        # Tamaño de imagen escalado
+        self.image_size = max(150, int(250 * self.scale_factor))
+        
+        print(f"[ESCALADO] Pantalla: {self.screen_width}x{self.screen_height}")
+        print(f"[ESCALADO] Factor: {self.scale_factor:.2f}")
+        print(f"[ESCALADO] Fuente título: {self.fonts['title']}px")
+
     def setup_gpio(self):
         """Configuración inicial del GPIO"""
         if GPIO_AVAILABLE:
@@ -225,24 +281,26 @@ class TestDaltonismoCompleto:
     
     def setup_ui(self):
         """Configuración de la interfaz de usuario"""
-        # Frame superior para indicadores - Compacto para pantalla pequeña
-        self.top_frame = tk.Frame(self.root, bg="#f0f0f0", height=80)
+        # Frame superior para indicadores - Adaptativo
+        self.top_frame = tk.Frame(self.root, bg="#f0f0f0", height=self.spacing['frame_height'])
         self.top_frame.pack(fill=tk.X)
         self.top_frame.pack_propagate(False)
         
-        # Indicador de proximidad - Optimizado para pantalla pequeña
+        # Indicador de proximidad - Escalado automático
         self.proximity_indicator = tk.Label(
-            self.top_frame, text=" Esperando usuario...", font=("Arial", 18, "bold"),
+            self.top_frame, text=" Esperando usuario...", 
+            font=("Arial", self.fonts['indicator'], "bold"),
             bg="#f0f0f0", fg="#FF5722"
         )
-        self.proximity_indicator.pack(side=tk.LEFT, padx=15, pady=15)
+        self.proximity_indicator.pack(side=tk.LEFT, padx=self.spacing['medium'], pady=self.spacing['medium'])
         
-        # Indicador de test actual - Compacto
+        # Indicador de test actual - Escalado automático
         self.test_indicator = tk.Label(
-            self.top_frame, text="", font=("Arial", 16, "bold"),
+            self.top_frame, text="", 
+            font=("Arial", self.fonts['indicator_small'], "bold"),
             bg="#f0f0f0", fg="#2196F3"
         )
-        self.test_indicator.pack(pady=15)
+        self.test_indicator.pack(pady=self.spacing['medium'])
         
         # Frame para test de colores
         self.setup_color_test_ui()
@@ -257,40 +315,45 @@ class TestDaltonismoCompleto:
         """Configura la UI para el test de colores"""
         self.main_frame = tk.Frame(self.root, bg="white")
         
-        # Título del test - Compacto para pantalla pequeña
+        # Título del test - Escalado automático
         self.test_title = tk.Label(
             self.main_frame, text=" Test de Colores Básicos", 
-            font=("Arial", 28, "bold"),
+            font=("Arial", self.fonts['title'], "bold"),
             fg="#2196F3", bg="white"
         )
-        self.test_title.pack(pady=15)
+        self.test_title.pack(pady=self.spacing['medium'])
         
-        # Texto principal - Tamaño moderado y legible
+        # Texto principal - Escalado automático
         self.label = tk.Label(
-            self.main_frame, text="", font=("Arial", 36, "bold"),
+            self.main_frame, text="", font=("Arial", self.fonts['main_text'], "bold"),
             fg="black", bg="white"
         )
-        self.label.pack(pady=20)
+        self.label.pack(pady=self.spacing['large'])
         
-        # Contador - Tamaño compacto
+        # Contador - Escalado automático
         self.counter_label = tk.Label(
-            self.main_frame, text="", font=("Arial", 20),
+            self.main_frame, text="", font=("Arial", self.fonts['counter']),
             fg="gray", bg="white"
         )
-        self.counter_label.pack(pady=8)
+        self.counter_label.pack(pady=self.spacing['small'])
         
         # Botones de colores
         self.buttons_frame = tk.Frame(self.main_frame, bg="white")
-        self.buttons_frame.pack(pady=30)
+        self.buttons_frame.pack(pady=self.spacing['large'])
         
         self.color_buttons = {}
         for color_name, hex_code in colors.items():
             btn = tk.Button(
-                self.buttons_frame, bg=hex_code, width=8, height=3,
+                self.buttons_frame, 
+                text=color_name,  # Mostrar el nombre completo del color
+                width=self.button_sizes['color_width'], 
+                height=self.button_sizes['color_height'],
                 command=lambda c=color_name: self.check_color_answer_with_animation(c),
-                bd=3, relief="raised", activebackground=hex_code,
-                cursor="hand2", font=("Arial", 12, "bold"), fg="white",
-                text=color_name[:3].upper()  # Mostrar las primeras 3 letras del color
+                bd=3, relief="raised", 
+                cursor="hand2", 
+                font=("Arial", self.fonts['button'], "bold"), 
+                bg="#f0f0f0", fg="black",  # Sin color para hacer el test válido
+                activebackground="#e0e0e0"
             )
             btn.pack(side=tk.LEFT, padx=15, pady=15)
             self.color_buttons[color_name] = btn
@@ -300,29 +363,29 @@ class TestDaltonismoCompleto:
         """Configura la UI para el test de Ishihara"""
         self.ishihara_frame = tk.Frame(self.root, bg="white")
         
-        # Título del test - Compacto para pantalla pequeña
+        # Título del test - Escalado automático
         self.ishihara_title = tk.Label(
             self.ishihara_frame, text=" Test de Láminas Ishihara", 
-            font=("Arial", 26, "bold"),
+            font=("Arial", self.fonts['title'], "bold"),
             fg="#FF5722", bg="white"
         )
-        self.ishihara_title.pack(pady=12)
+        self.ishihara_title.pack(pady=self.spacing['medium'])
         
-        # Instrucciones - Tamaño moderado
+        # Instrucciones - Escalado automático
         self.ishihara_instructions = tk.Label(
             self.ishihara_frame, 
             text="¿Qué número ves?", 
-            font=("Arial", 20, "bold"),
+            font=("Arial", self.fonts['button'], "bold"),
             fg="#333", bg="white"
         )
-        self.ishihara_instructions.pack(pady=8)
+        self.ishihara_instructions.pack(pady=self.spacing['small'])
         
-        # Contador Ishihara - Compacto
+        # Contador Ishihara - Escalado automático
         self.ishihara_counter = tk.Label(
-            self.ishihara_frame, text="", font=("Arial", 18),
+            self.ishihara_frame, text="", font=("Arial", self.fonts['counter']),
             fg="gray", bg="white"
         )
-        self.ishihara_counter.pack(pady=8)
+        self.ishihara_counter.pack(pady=self.spacing['small'])
         
         # Frame principal horizontal (imagen izquierda, botones derecha)
         self.content_frame = tk.Frame(self.ishihara_frame, bg="white")
@@ -428,30 +491,53 @@ class TestDaltonismoCompleto:
     
     def next_ishihara_round(self):
         """Siguiente ronda del test de Ishihara"""
-        if not self.user_nearby:
-            self.show_waiting_screen()
-            return
+        try:
+            if not self.user_nearby:
+                self.show_waiting_screen()
+                return
             
-        if self.ishihara_attempt >= self.ishihara_attempts:
+            # Verificación de seguridad para prevenir crashes
+            if self.ishihara_attempt >= self.ishihara_attempts or self.ishihara_attempt >= len(self.ishihara_plates):
+                print(f"[DEBUG] Test completado: attempt={self.ishihara_attempt}, total={self.ishihara_attempts}")
+                self.show_final_results()
+                return
+            
+            # Verificar que tenemos placas disponibles
+            if not self.ishihara_plates or len(self.ishihara_plates) == 0:
+                print("[ERROR] No hay placas de Ishihara disponibles")
+                self.show_final_results()
+                return
+            
+            # Actualizar contador
+            counter_text = f"Lámina {self.ishihara_attempt + 1} de {self.ishihara_attempts}"
+            self.ishihara_counter.config(text=counter_text)
+            
+            # Verificar índice válido antes de acceder a la placa
+            if self.ishihara_attempt < len(self.ishihara_plates):
+                current_plate = self.ishihara_plates[self.ishihara_attempt]
+                self.current_ishihara_answer = current_plate["correct_answer"]
+                self.current_options = current_plate["options"]
+                
+                # Mostrar imagen con verificación
+                img = current_plate["image"]
+                if img:
+                    self.current_photo = ImageTk.PhotoImage(img)
+                    self.ishihara_image_label.config(image=self.current_photo)
+                    
+                    # Crear botones de opciones
+                    self.create_option_buttons()
+                else:
+                    print(f"[ERROR] Imagen no disponible para placa {self.ishihara_attempt}")
+                    self.ishihara_attempt += 1
+                    self.root.after(100, self.next_ishihara_round)
+            else:
+                print(f"[ERROR] Índice fuera de rango: {self.ishihara_attempt} >= {len(self.ishihara_plates)}")
+                self.show_final_results()
+                
+        except Exception as e:
+            print(f"[ERROR] Error en next_ishihara_round: {e}")
+            # En caso de error, ir directo a resultados para no crashear
             self.show_final_results()
-            return
-        
-        # Actualizar contador
-        counter_text = f"Lámina {self.ishihara_attempt + 1} de {self.ishihara_attempts}"
-        self.ishihara_counter.config(text=counter_text)
-        
-        # Mostrar lámina actual
-        current_plate = self.ishihara_plates[self.ishihara_attempt]
-        self.current_ishihara_answer = current_plate["correct_answer"]
-        self.current_options = current_plate["options"]
-        
-        # Mostrar imagen
-        img = current_plate["image"]
-        self.current_photo = ImageTk.PhotoImage(img)
-        self.ishihara_image_label.config(image=self.current_photo)
-        
-        # Crear botones de opciones
-        self.create_option_buttons()
     
     def create_option_buttons(self):
         """Crea los botones de opción múltiple para Ishihara"""
@@ -472,40 +558,36 @@ class TestDaltonismoCompleto:
         self.options_frame.grid_rowconfigure(4, weight=1)
         self.options_frame.grid_columnconfigure(0, weight=1)
         
-        # Título para los botones
+        # Título para los botones - Escalado adaptativo
         title_label = tk.Label(
             self.options_frame, 
             text="Selecciona una opción:",
-            font=("Segoe UI", 18, "bold"),
+            font=("Segoe UI", self.fonts['button'], "bold"),
             fg="#FF5722", bg="white"
         )
-        title_label.grid(row=0, column=0, pady=10)
+        title_label.grid(row=0, column=0, pady=self.spacing['medium'])
         
-        # Colores para los botones
-        button_colors = ["#E3F2FD", "#E8F5E8", "#FFF3E0", "#FCE4EC"]
-        
-        # Crear botones compactos para pantalla pequeña
+        # Crear botones sin colores para mantener validez del test
         for i, option in enumerate(self.current_options):
             btn = tk.Button(
                 self.options_frame, 
                 text=str(option), 
-                font=("Arial", 16, "bold"),  # Tamaño moderado
-                width=12, height=2,  # Botones compactos
-                bg=button_colors[i % len(button_colors)], 
-                fg="#1976D2" if option != "No veo nada" else "#FF5722",
+                font=("Arial", self.fonts['button'], "bold"),
+                width=self.button_sizes['large_width'], height=self.button_sizes['height'],
+                bg="white", fg="black",  # Sin colores para no invalidar el test
                 relief="raised", bd=3, cursor="hand2",
                 command=lambda opt=option: self.check_ishihara_answer(opt)
             )
-            btn.grid(row=i+1, column=0, pady=6, padx=10, sticky="ew")  # Espaciado compacto
+            btn.grid(row=i+1, column=0, pady=self.spacing['small'], padx=self.spacing['medium'], sticky="ew")
             self.option_buttons.append(btn)
             
-            # Añadir efectos hover
-            self.add_option_button_hover(btn, button_colors[i % len(button_colors)])
+            # Añadir efectos hover neutros
+            self.add_option_button_hover(btn, "white")
     
     def add_option_button_hover(self, button, normal_color):
-        """Añade efecto hover a los botones de opción"""
+        """Añade efecto hover neutral a los botones de opción"""
         def on_enter(e):
-            button.config(bg="#BBDEFB", relief="solid")
+            button.config(bg="lightgray", relief="solid")
         
         def on_leave(e):
             button.config(bg=normal_color, relief="raised")
@@ -515,26 +597,38 @@ class TestDaltonismoCompleto:
     
     def check_ishihara_answer(self, chosen_answer):
         """Verifica respuesta del test de Ishihara"""
-        if not self.user_nearby or self.current_test != "ishihara":
-            return
-        
-        # Verificar respuesta
-        if chosen_answer == self.current_ishihara_answer:
-            self.ishihara_score += 1
-        
-        # Efecto visual en el botón seleccionado
-        for btn in self.option_buttons:
-            if btn['text'] == str(chosen_answer):
-                if chosen_answer == self.current_ishihara_answer:
-                    btn.config(bg="#4CAF50", fg="white")  # Verde para correcto
-                else:
-                    btn.config(bg="#F44336", fg="white")  # Rojo para incorrecto
-                self.animate_button_press(btn)
-                break
-        
-        # Avanzar a siguiente lámina
-        self.ishihara_attempt += 1
-        self.root.after(1500, self.next_ishihara_round)
+        try:
+            if not self.user_nearby or self.current_test != "ishihara":
+                return
+            
+            # Verificar respuesta
+            if chosen_answer == self.current_ishihara_answer:
+                self.ishihara_score += 1
+            
+            print(f"[DEBUG] Respuesta: {chosen_answer}, Correcta: {self.current_ishihara_answer}, Puntaje: {self.ishihara_score}")
+            
+            # Efecto visual neutral en el botón seleccionado
+            for btn in self.option_buttons:
+                if btn['text'] == str(chosen_answer):
+                    if chosen_answer == self.current_ishihara_answer:
+                        btn.config(bg="darkgray", fg="white", relief="solid", bd=5)  # Gris oscuro para correcto
+                    else:
+                        btn.config(bg="gray", fg="white", relief="solid", bd=5)  # Gris claro para incorrecto
+                    self.animate_button_press(btn)
+                    break
+            
+            # Avanzar a siguiente lámina
+            self.ishihara_attempt += 1
+            print(f"[DEBUG] Avanzando a attempt {self.ishihara_attempt} de {self.ishihara_attempts}")
+            
+            # Programar siguiente ronda con verificación
+            self.root.after(1500, self.next_ishihara_round)
+            
+        except Exception as e:
+            print(f"[ERROR] Error en check_ishihara_answer: {e}")
+            # En caso de error, avanzar de forma segura
+            self.ishihara_attempt += 1
+            self.root.after(100, self.next_ishihara_round)
     
     def check_color_answer_with_animation(self, chosen_color):
         """Verifica respuesta del test de colores con animación"""
@@ -565,42 +659,52 @@ class TestDaltonismoCompleto:
     
     def show_final_results(self):
         """Muestra los resultados finales"""
-        self.current_test = "results"
-        self.main_frame.pack_forget()
-        self.ishihara_frame.pack_forget()
+        try:
+            self.current_test = "results"
+            print(f"[DEBUG] Mostrando resultados: colores={self.color_score}/{self.color_attempts}, ishihara={self.ishihara_score}/{self.ishihara_attempts}")
+            
+            # Ocultar frames anteriores de forma segura
+            try:
+                self.main_frame.pack_forget()
+            except:
+                pass
+            try:
+                self.ishihara_frame.pack_forget()
+            except:
+                pass
+            
+            # Frame de resultados
+            results_frame = tk.Frame(self.root, bg="white")
+            results_frame.pack(expand=True)
         
-        # Frame de resultados
-        results_frame = tk.Frame(self.root, bg="white")
-        results_frame.pack(expand=True)
+            # Título - Escalado adaptativo
+            title = tk.Label(
+                results_frame, text=" Resultados del Test", 
+                font=("Arial", self.fonts['title'], "bold"),
+                fg="#2196F3", bg="white"
+            )
+            title.pack(pady=self.spacing['large'])
         
-        # Título - Compacto para pantalla pequeña
-        title = tk.Label(
-            results_frame, text=" Resultados del Test", 
-            font=("Arial", 32, "bold"),
-            fg="#2196F3", bg="white"
-        )
-        title.pack(pady=20)
-        
-        # Resultados del test de colores - Compacto
+        # Resultados del test de colores - Escalado adaptativo
         color_percentage = (self.color_score / self.color_attempts) * 100
         color_result = tk.Label(
             results_frame, 
             text=f" Colores: {self.color_score}/{self.color_attempts} ({color_percentage:.1f}%)",
-            font=("Arial", 20, "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
+            font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
             bg="white"
         )
-        color_result.pack(pady=10)
+        color_result.pack(pady=self.spacing['medium'])
         
-        # Resultados del test de Ishihara - Compacto
+        # Resultados del test de Ishihara - Escalado adaptativo
         if self.ishihara_attempts > 0:
             ishihara_percentage = (self.ishihara_score / self.ishihara_attempts) * 100
             ishihara_result = tk.Label(
                 results_frame,
                 text=f" Ishihara: {self.ishihara_score}/{self.ishihara_attempts} ({ishihara_percentage:.1f}%)",
-                font=("Arial", 20, "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
+                font=("Arial", self.fonts['button'], "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
                 bg="white"
             )
-            ishihara_result.pack(pady=10)
+            ishihara_result.pack(pady=self.spacing['medium'])
         
         # Evaluación general
         total_score = self.color_score + self.ishihara_score
@@ -624,24 +728,45 @@ class TestDaltonismoCompleto:
             evaluation = "[ERROR] Se recomienda consulta oftalmologica"
             eval_color = "#F44336"
         
-        # Evaluación final - Compacto pero legible
-        eval_label = tk.Label(
-            results_frame, text=evaluation,
-            font=("Arial", 22, "bold"), fg=eval_color, bg="white"
-        )
-        eval_label.pack(pady=20)
+            # Evaluación final - Escalado adaptativo
+            eval_label = tk.Label(
+                results_frame, text=evaluation,
+                font=("Arial", self.fonts['button'], "bold"), fg=eval_color, bg="white"
+            )
+            eval_label.pack(pady=self.spacing['large'])
+            
+            # Botón para reiniciar - Escalado adaptativo, sin colores
+            restart_btn = tk.Button(
+                results_frame, text=" Nuevo Test",
+                font=("Arial", self.fonts['button'], "bold"), bg="lightgray", fg="black",
+                width=self.button_sizes['large_width'], height=self.button_sizes['height'], cursor="hand2",
+                command=self.restart_test
+            )
+            restart_btn.pack(pady=self.spacing['large'])
+            
+            # Actualizar indicador
+            self.test_indicator.config(text=" Test Completado")
         
-        # Botón para reiniciar - Tamaño compacto
-        restart_btn = tk.Button(
-            results_frame, text=" Nuevo Test",
-            font=("Arial", 18, "bold"), bg="#2196F3", fg="white",
-            width=15, height=2, cursor="hand2",
-            command=self.restart_test
-        )
-        restart_btn.pack(pady=25)
-        
-        # Actualizar indicador
-        self.test_indicator.config(text=" Test Completado")
+        except Exception as e:
+            print(f"[ERROR] Error mostrando resultados: {e}")
+            # Crear una pantalla de resultados básica en caso de error
+            try:
+                for widget in self.root.winfo_children():
+                    if hasattr(widget, 'pack_forget'):
+                        widget.pack_forget()
+                
+                error_frame = tk.Frame(self.root, bg="white")
+                error_frame.pack(expand=True)
+                
+                error_label = tk.Label(error_frame, text="Test Completado\n(Error al mostrar resultados detallados)", 
+                                     font=("Arial", 24), fg="black", bg="white")
+                error_label.pack(pady=50)
+                
+                restart_btn = tk.Button(error_frame, text="Nuevo Test", font=("Arial", 18), 
+                                      bg="lightgray", fg="black", command=self.restart_test)
+                restart_btn.pack(pady=20)
+            except Exception as e2:
+                print(f"[ERROR] Error crítico en show_final_results: {e2}")
     
     def restart_test(self):
         """Reinicia todo el test"""
