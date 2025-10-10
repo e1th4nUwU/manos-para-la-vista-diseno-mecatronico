@@ -60,9 +60,9 @@ class IshiharaImageLoader:
                 image_path = os.path.join(self.image_directory, f"{filename}.{ext}")
                 if os.path.exists(image_path):
                     try:
-                        # Cargar y redimensionar imagen - Optimizado para Raspberry Pi
+                        # Cargar y redimensionar imagen - Compacto para pantalla pequeña
                         img = Image.open(image_path)
-                        img = img.resize((320, 320), Image.LANCZOS)  # Tamaño más pequeño para mejor rendimiento
+                        img = img.resize((250, 250), Image.LANCZOS)  # Tamaño compacto para pantallas pequeñas
                         
                         plate_data = {
                             "filename": filename,
@@ -225,24 +225,24 @@ class TestDaltonismoCompleto:
     
     def setup_ui(self):
         """Configuración de la interfaz de usuario"""
-        # Frame superior para indicadores - Optimizado para Raspberry Pi
-        self.top_frame = tk.Frame(self.root, bg="#f0f0f0", height=120)
+        # Frame superior para indicadores - Compacto para pantalla pequeña
+        self.top_frame = tk.Frame(self.root, bg="#f0f0f0", height=80)
         self.top_frame.pack(fill=tk.X)
         self.top_frame.pack_propagate(False)
         
-        # Indicador de proximidad - Fuente más grande y legible
+        # Indicador de proximidad - Optimizado para pantalla pequeña
         self.proximity_indicator = tk.Label(
-            self.top_frame, text=" Esperando usuario...", font=("Arial", 28, "bold"),
+            self.top_frame, text=" Esperando usuario...", font=("Arial", 18, "bold"),
             bg="#f0f0f0", fg="#FF5722"
         )
-        self.proximity_indicator.pack(side=tk.LEFT, padx=20, pady=25)
+        self.proximity_indicator.pack(side=tk.LEFT, padx=15, pady=15)
         
-        # Indicador de test actual - Fuente más grande
+        # Indicador de test actual - Compacto
         self.test_indicator = tk.Label(
-            self.top_frame, text="", font=("Arial", 24, "bold"),
+            self.top_frame, text="", font=("Arial", 16, "bold"),
             bg="#f0f0f0", fg="#2196F3"
         )
-        self.test_indicator.pack(pady=30)
+        self.test_indicator.pack(pady=15)
         
         # Frame para test de colores
         self.setup_color_test_ui()
@@ -257,27 +257,27 @@ class TestDaltonismoCompleto:
         """Configura la UI para el test de colores"""
         self.main_frame = tk.Frame(self.root, bg="white")
         
-        # Título del test - Fuente más grande para Raspberry Pi
+        # Título del test - Compacto para pantalla pequeña
         self.test_title = tk.Label(
             self.main_frame, text=" Test de Colores Básicos", 
-            font=("Arial", 48, "bold"),
+            font=("Arial", 28, "bold"),
             fg="#2196F3", bg="white"
         )
-        self.test_title.pack(pady=30)
+        self.test_title.pack(pady=15)
         
-        # Texto principal - Fuente muy grande y legible
+        # Texto principal - Tamaño moderado y legible
         self.label = tk.Label(
-            self.main_frame, text="", font=("Arial", 64, "bold"),
+            self.main_frame, text="", font=("Arial", 36, "bold"),
             fg="black", bg="white"
         )
-        self.label.pack(pady=50)
+        self.label.pack(pady=20)
         
-        # Contador - Fuente más grande
+        # Contador - Tamaño compacto
         self.counter_label = tk.Label(
-            self.main_frame, text="", font=("Arial", 32),
+            self.main_frame, text="", font=("Arial", 20),
             fg="gray", bg="white"
         )
-        self.counter_label.pack(pady=15)
+        self.counter_label.pack(pady=8)
         
         # Botones de colores
         self.buttons_frame = tk.Frame(self.main_frame, bg="white")
@@ -286,10 +286,10 @@ class TestDaltonismoCompleto:
         self.color_buttons = {}
         for color_name, hex_code in colors.items():
             btn = tk.Button(
-                self.buttons_frame, bg=hex_code, width=12, height=6,
+                self.buttons_frame, bg=hex_code, width=8, height=3,
                 command=lambda c=color_name: self.check_color_answer_with_animation(c),
-                bd=4, relief="raised", activebackground=hex_code,
-                cursor="hand2", font=("Arial", 16, "bold"), fg="white",
+                bd=3, relief="raised", activebackground=hex_code,
+                cursor="hand2", font=("Arial", 12, "bold"), fg="white",
                 text=color_name[:3].upper()  # Mostrar las primeras 3 letras del color
             )
             btn.pack(side=tk.LEFT, padx=15, pady=15)
@@ -300,29 +300,29 @@ class TestDaltonismoCompleto:
         """Configura la UI para el test de Ishihara"""
         self.ishihara_frame = tk.Frame(self.root, bg="white")
         
-        # Título del test - Fuente más grande
+        # Título del test - Compacto para pantalla pequeña
         self.ishihara_title = tk.Label(
             self.ishihara_frame, text=" Test de Láminas Ishihara", 
-            font=("Arial", 48, "bold"),
+            font=("Arial", 26, "bold"),
             fg="#FF5722", bg="white"
         )
-        self.ishihara_title.pack(pady=30)
+        self.ishihara_title.pack(pady=12)
         
-        # Instrucciones - Fuente más grande y legible
+        # Instrucciones - Tamaño moderado
         self.ishihara_instructions = tk.Label(
             self.ishihara_frame, 
-            text="¿Qué número ves en la imagen?", 
-            font=("Arial", 32, "bold"),
+            text="¿Qué número ves?", 
+            font=("Arial", 20, "bold"),
             fg="#333", bg="white"
         )
-        self.ishihara_instructions.pack(pady=15)
+        self.ishihara_instructions.pack(pady=8)
         
-        # Contador Ishihara - Fuente más grande
+        # Contador Ishihara - Compacto
         self.ishihara_counter = tk.Label(
-            self.ishihara_frame, text="", font=("Arial", 28),
+            self.ishihara_frame, text="", font=("Arial", 18),
             fg="gray", bg="white"
         )
-        self.ishihara_counter.pack(pady=15)
+        self.ishihara_counter.pack(pady=8)
         
         # Frame principal horizontal (imagen izquierda, botones derecha)
         self.content_frame = tk.Frame(self.ishihara_frame, bg="white")
@@ -484,19 +484,19 @@ class TestDaltonismoCompleto:
         # Colores para los botones
         button_colors = ["#E3F2FD", "#E8F5E8", "#FFF3E0", "#FCE4EC"]
         
-        # Crear botones optimizados para pantalla táctil
+        # Crear botones compactos para pantalla pequeña
         for i, option in enumerate(self.current_options):
             btn = tk.Button(
                 self.options_frame, 
                 text=str(option), 
-                font=("Arial", 24, "bold"),  # Fuente más grande
-                width=15, height=3,  # Botones más grandes
+                font=("Arial", 16, "bold"),  # Tamaño moderado
+                width=12, height=2,  # Botones compactos
                 bg=button_colors[i % len(button_colors)], 
                 fg="#1976D2" if option != "No veo nada" else "#FF5722",
-                relief="raised", bd=4, cursor="hand2",
+                relief="raised", bd=3, cursor="hand2",
                 command=lambda opt=option: self.check_ishihara_answer(opt)
             )
-            btn.grid(row=i+1, column=0, pady=12, padx=15, sticky="ew")  # Más espacio entre botones
+            btn.grid(row=i+1, column=0, pady=6, padx=10, sticky="ew")  # Espaciado compacto
             self.option_buttons.append(btn)
             
             # Añadir efectos hover
@@ -573,34 +573,34 @@ class TestDaltonismoCompleto:
         results_frame = tk.Frame(self.root, bg="white")
         results_frame.pack(expand=True)
         
-        # Título - Optimizado para Raspberry Pi
+        # Título - Compacto para pantalla pequeña
         title = tk.Label(
             results_frame, text=" Resultados del Test", 
-            font=("Arial", 56, "bold"),
+            font=("Arial", 32, "bold"),
             fg="#2196F3", bg="white"
         )
-        title.pack(pady=50)
+        title.pack(pady=20)
         
-        # Resultados del test de colores - Fuente más grande
+        # Resultados del test de colores - Compacto
         color_percentage = (self.color_score / self.color_attempts) * 100
         color_result = tk.Label(
             results_frame, 
             text=f" Colores: {self.color_score}/{self.color_attempts} ({color_percentage:.1f}%)",
-            font=("Arial", 32, "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
+            font=("Arial", 20, "bold"), fg="#4CAF50" if color_percentage >= 75 else "#FF5722",
             bg="white"
         )
-        color_result.pack(pady=20)
+        color_result.pack(pady=10)
         
-        # Resultados del test de Ishihara - Fuente más grande
+        # Resultados del test de Ishihara - Compacto
         if self.ishihara_attempts > 0:
             ishihara_percentage = (self.ishihara_score / self.ishihara_attempts) * 100
             ishihara_result = tk.Label(
                 results_frame,
                 text=f" Ishihara: {self.ishihara_score}/{self.ishihara_attempts} ({ishihara_percentage:.1f}%)",
-                font=("Arial", 32, "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
+                font=("Arial", 20, "bold"), fg="#4CAF50" if ishihara_percentage >= 75 else "#FF5722",
                 bg="white"
             )
-            ishihara_result.pack(pady=20)
+            ishihara_result.pack(pady=10)
         
         # Evaluación general
         total_score = self.color_score + self.ishihara_score
@@ -624,21 +624,21 @@ class TestDaltonismoCompleto:
             evaluation = "[ERROR] Se recomienda consulta oftalmologica"
             eval_color = "#F44336"
         
-        # Evaluación final - Fuente más grande
+        # Evaluación final - Compacto pero legible
         eval_label = tk.Label(
             results_frame, text=evaluation,
-            font=("Arial", 36, "bold"), fg=eval_color, bg="white"
+            font=("Arial", 22, "bold"), fg=eval_color, bg="white"
         )
-        eval_label.pack(pady=40)
+        eval_label.pack(pady=20)
         
-        # Botón para reiniciar - Más grande y legible
+        # Botón para reiniciar - Tamaño compacto
         restart_btn = tk.Button(
-            results_frame, text=" Realizar Nuevo Test",
-            font=("Arial", 28, "bold"), bg="#2196F3", fg="white",
-            width=18, height=3, cursor="hand2",
+            results_frame, text=" Nuevo Test",
+            font=("Arial", 18, "bold"), bg="#2196F3", fg="white",
+            width=15, height=2, cursor="hand2",
             command=self.restart_test
         )
-        restart_btn.pack(pady=50)
+        restart_btn.pack(pady=25)
         
         # Actualizar indicador
         self.test_indicator.config(text=" Test Completado")
