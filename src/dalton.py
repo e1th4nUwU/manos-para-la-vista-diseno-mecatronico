@@ -260,7 +260,7 @@ class TestDaltonismoCompleto:
     def move_servo_result(self, satisfactory=True):
         """
         Mueve el servo según el resultado del test
-        satisfactory: True = 90° derecha, False = 90° izquierda desde centro
+        satisfactory: True = 90° izquierda, False = 90° derecha desde centro
         """
         print(f"[SERVO] Resultado: {'Satisfactorio' if satisfactory else 'Insatisfactorio'}")
         
@@ -273,13 +273,13 @@ class TestDaltonismoCompleto:
             print("[SERVO] Ya está en centro")
         
         if satisfactory:
-            # Resultado satisfactorio - girar 90° a la derecha desde centro (90° → 180°)
-            print("[SERVO] Girando 90° a la derecha desde centro")
-            self.set_servo_angle(180)
-        else:
-            # Resultado insatisfactorio - girar 90° a la izquierda desde centro (90° → 0°)
+            # Resultado satisfactorio - girar 90° a la IZQUIERDA desde centro (90° → 0°)
             print("[SERVO] Girando 90° a la izquierda desde centro")
             self.set_servo_angle(0)
+        else:
+            # Resultado insatisfactorio - girar 90° a la DERECHA desde centro (90° → 180°)
+            print("[SERVO] Girando 90° a la derecha desde centro")
+            self.set_servo_angle(180)
         
         # Esperar 2 segundos en la posición del resultado
         time.sleep(2)
