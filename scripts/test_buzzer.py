@@ -38,6 +38,7 @@ class BuzzerTester:
     
     def setup(self):
         """Configura el GPIO para el buzzer"""
+        global GPIO_AVAILABLE
         if GPIO_AVAILABLE:
             try:
                 GPIO.setmode(GPIO.BCM)

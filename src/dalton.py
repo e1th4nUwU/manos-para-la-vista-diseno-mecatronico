@@ -207,6 +207,10 @@ class TestDaltonismoCompleto:
         # Configurar UI
         self.setup_ui()
         
+        # Reproducir tono de inicio
+        if GPIO_AVAILABLE and self.buzzer_pwm:
+            threading.Thread(target=self.buzzer_start, daemon=True).start()
+        
         # Iniciar sensor
         self.start_sensor_monitoring()
     
@@ -243,8 +247,8 @@ class TestDaltonismoCompleto:
             'width': max(3, int(4 * self.scale_factor)),
             'height': max(1, int(2 * self.scale_factor)),
             'large_width': max(12, int(15 * self.scale_factor)),
-            'option_width': max(8, int(10 * self.scale_factor)),  # Más cuadrado
-            'option_height': max(6, int(8 * self.scale_factor)),  # Mucho más alto para cuadrado
+            'option_width': max(8, int(10 * self.scale_factor)),  # Botones cuadrados
+            'option_height': max(8, int(10 * self.scale_factor)),  # Mismo valor para cuadrado
             'restart_width': max(12, int(15 * self.scale_factor)),
             'restart_height': max(1, int(2 * self.scale_factor))
         }
@@ -257,8 +261,8 @@ class TestDaltonismoCompleto:
             'frame_height': max(60, int(80 * self.scale_factor))
         }
         
-        # Tamaño de imagen escalado - Mínimo 50% de la pantalla
-        min_image_percentage = 0.5  # 50% de la pantalla
+        # Tamaño de imagen escalado - 75% de la pantalla para mejor visibilidad
+        min_image_percentage = 0.75  # 75% de la pantalla
         max_dimension = min(self.screen_width, self.screen_height)
         self.image_size = max(300, int(max_dimension * min_image_percentage))
         
@@ -333,23 +337,51 @@ class TestDaltonismoCompleto:
         except Exception as e:
             print(f"[ERROR] Error reproduciendo tono: {e}")
     
-    def buzzer_success(self):
-        """Melodía de éxito - Tonos ascendentes agradables"""
-        print("[BUZZER] Reproduciendo tono de éxito")
-        # Melodía ascendente: Do, Mi, Sol, Do alto
-        frequencies = [523, 659, 784, 1047]
-        for freq in frequencies:
-            self.play_buzzer_tone(freq, 0.15)
+    def buzzer_pip_correct(self):
+        """Pip corto para respuesta correcta"""
+        print("[BUZZER] Pip correcto")
+        self.play_buzzer_tone(1200, 0.1)  # Tono agudo corto
+    
+    def buzzer_pip_incorrect(self):
+        """Pip corto para respuesta incorrecta"""
+        print("[BUZZER] Pip incorrecto")
+        self.play_buzzer_tone(400, 0.15)  # Tono grave corto
+    
+    def buzzer_start(self):
+        """Tonito de inicio del programa"""
+        print("[BUZZER] Tono de inicio")
+        # Tonito alegre de inicio: Do-Mi-Sol
+        notes = [(523, 0.1), (659, 0.1), (784, 0.15)]
+        for freq, duration in notes:
+            self.play_buzzer_tone(freq, duration)
             time.sleep(0.05)
     
-    def buzzer_failure(self):
-        """Melodía de fallo - Tonos descendentes"""
-        print("[BUZZER] Reproduciendo tono de fallo")
-        # Melodía descendente
-        frequencies = [800, 600, 400, 250]
-        for freq in frequencies:
-            self.play_buzzer_tone(freq, 0.2)
+    def buzzer_result_good(self):
+        """Tonada alegre para resultado bueno"""
+        print("[BUZZER] Tonada de resultado bueno")
+        # Melodía alegre: Do-Mi-Sol-Do alto-Sol-Do alto
+        notes = [(523, 0.15), (659, 0.15), (784, 0.15), (1047, 0.2), (784, 0.15), (1047, 0.3)]
+        for freq, duration in notes:
+            self.play_buzzer_tone(freq, duration)
             time.sleep(0.05)
+    
+    def buzzer_result_bad(self):
+        """Tonada triste para resultado malo"""
+        print("[BUZZER] Tonada de resultado malo")
+        # Melodía descendente triste
+        notes = [(784, 0.2), (659, 0.2), (523, 0.2), (392, 0.4)]
+        for freq, duration in notes:
+            self.play_buzzer_tone(freq, duration)
+            time.sleep(0.05)
+    
+    # Mantener las funciones antiguas por compatibilidad (ahora llaman a las nuevas)
+    def buzzer_success(self):
+        """Alias para buzzer_pip_correct"""
+        self.buzzer_pip_correct()
+    
+    def buzzer_failure(self):
+        """Alias para buzzer_pip_incorrect"""
+        self.buzzer_pip_incorrect()
     
     def move_servo_result(self, satisfactory=True):
         """
@@ -441,12 +473,7 @@ class TestDaltonismoCompleto:
         )
         self.label.grid(row=1, column=0, sticky="nsew", pady=self.spacing['large'])
         
-        # Contador - Escalado automático
-        self.counter_label = tk.Label(
-            self.main_frame, text="", font=("Arial", self.fonts['counter']),
-            fg="gray", bg="white"
-        )
-        self.counter_label.grid(row=2, column=0, sticky="nsew", pady=self.spacing['small'])
+        # Eliminado: contador de progreso
         
         # Botones de colores - Centrados
         self.buttons_frame = tk.Frame(self.main_frame, bg="white")
@@ -499,12 +526,7 @@ class TestDaltonismoCompleto:
         )
         self.ishihara_instructions.pack(pady=self.spacing['small'])
         
-        # Contador Ishihara - Escalado automático
-        self.ishihara_counter = tk.Label(
-            self.ishihara_frame, text="", font=("Arial", self.fonts['counter']),
-            fg="gray", bg="white"
-        )
-        self.ishihara_counter.pack(pady=self.spacing['small'])
+        # Eliminado: contador de progreso Ishihara
         
         # Frame principal horizontal (imagen izquierda, botones derecha)
         self.content_frame = tk.Frame(self.ishihara_frame, bg="white")
@@ -546,7 +568,7 @@ class TestDaltonismoCompleto:
             return
             
         self.current_test = "colors"
-        self.test_indicator.config(text=" Test de Colores (Parte 1/2)")
+        self.test_indicator.config(text="✓ Test de Colores")
         
         # Mostrar frame de colores
         self.ishihara_frame.pack_forget()
@@ -576,12 +598,11 @@ class TestDaltonismoCompleto:
         
         # Actualizar UI
         self.label.config(text=f"Selecciona el color:", fg="black")
-        counter_text = f"Pregunta {self.color_attempt + 1} de {self.color_attempts}"
-        self.counter_label.config(text=counter_text)
+        
+        # Eliminado: actualización de contador
         
         # Animar texto principal
         self.animate_text_fade(self.label, f"Selecciona: {self.current_color_name}")
-        self.pulse_counter(self.counter_label)
     
     def start_ishihara_test(self):
         """Inicia el test de Ishihara"""
@@ -595,7 +616,7 @@ class TestDaltonismoCompleto:
             
         print(f"[DEBUG] Cambiando a test Ishihara con {len(self.ishihara_plates)} laminas")
         self.current_test = "ishihara"
-        self.test_indicator.config(text="[ISHIHARA] Test Ishihara (Parte 2/2)")
+        self.test_indicator.config(text="✓ Test Ishihara")
         
         # Cambiar a frame de Ishihara
         self.main_frame.pack_forget()
@@ -627,9 +648,7 @@ class TestDaltonismoCompleto:
                 self.show_final_results()
                 return
             
-            # Actualizar contador
-            counter_text = f"Lámina {self.ishihara_attempt + 1} de {self.ishihara_attempts}"
-            self.ishihara_counter.config(text=counter_text)
+            # Eliminado: actualización de contador Ishihara
             
             # Verificar índice válido antes de acceder a la placa
             if self.ishihara_attempt < len(self.ishihara_plates):
@@ -695,7 +714,7 @@ class TestDaltonismoCompleto:
                 text=str(option), 
                 font=("Arial", self.fonts['button'], "bold"),
                 width=self.button_sizes['option_width'], 
-                height=self.button_sizes['option_height'],  # Ahora más alto, casi cuadrado
+                height=self.button_sizes['option_height'],  # Botones cuadrados
                 bg="white", fg="black",  # Sin colores para no invalidar el test
                 relief="raised", bd=3, cursor="hand2",
                 command=lambda opt=option: self.check_ishihara_answer(opt)
@@ -859,6 +878,13 @@ class TestDaltonismoCompleto:
             # CONTROL DEL SERVO SEGÚN RESULTADO
             is_satisfactory = overall_percentage >= 75  # Umbral para resultado satisfactorio
             print(f"[RESULTADO] Puntuacion: {overall_percentage:.1f}% - {'SATISFACTORIO' if is_satisfactory else 'INSATISFACTORIO'}")
+            
+            # Reproducir tonada según resultado
+            if GPIO_AVAILABLE and self.buzzer_pwm:
+                if is_satisfactory:
+                    threading.Thread(target=self.buzzer_result_good, daemon=True).start()
+                else:
+                    threading.Thread(target=self.buzzer_result_bad, daemon=True).start()
             
             # Mover servo según resultado
             self.root.after(1000, lambda: self.move_servo_result(is_satisfactory))
@@ -1039,7 +1065,7 @@ class TestDaltonismoCompleto:
         """Actualiza el indicador de proximidad"""
         if not SENSOR_ENABLED:
             self.proximity_indicator.config(
-                text="🔧 Modo sin sensor - Test manual", 
+                text="Modo sin sensor - Test manual", 
                 fg="#2196F3"
             )
         elif self.user_nearby:
