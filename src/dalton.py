@@ -10,7 +10,7 @@ import argparse
 import sys
 
 # ============================================================================
-# CONFIGURACIÓN DE HARDWARE - Cambiar a False para ejecutar sin hardware físico
+# CONFIGURACIÓN DE HARDWARE
 # ============================================================================
 # Parsear argumentos de línea de comandos
 parser = argparse.ArgumentParser(
@@ -18,34 +18,43 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
     epilog='''
 Ejemplos de uso:
-  python3 dalton.py                    # Modo normal con hardware
-  python3 dalton.py --no-hardware      # Modo simulación (sin GPIO)
-  python3 dalton.py --no-sensor        # Alias para --no-hardware
-  python3 dalton.py --simulation       # Alias para --no-hardware
+  python3 dalton.py                    # Modo normal con todo el hardware
+  python3 dalton.py --no-sensor        # Sin sensor (buzzer y servo SÍ funcionan)
+  python3 dalton.py --no-hardware      # Sin ningún hardware (todo simulado)
     '''
 )
 parser.add_argument(
-    '--no-hardware', '--no-sensor', '--simulation',
+    '--no-sensor',
+    dest='no_sensor',
+    action='store_true',
+    help='Deshabilitar solo el sensor ultrasónico (buzzer y servo funcionan normalmente)'
+)
+parser.add_argument(
+    '--no-hardware',
     dest='no_hardware',
     action='store_true',
-    help='Ejecutar en modo simulación sin hardware físico (sin GPIO, sensores, servo, buzzer)'
+    help='Deshabilitar TODO el hardware: sensor, servo y buzzer (modo simulación completa)'
 )
 
 args = parser.parse_args()
 
-# Configurar HARDWARE_ENABLED basado en argumentos de línea de comandos
-HARDWARE_ENABLED = not args.no_hardware  # Si --no-hardware está presente, HARDWARE_ENABLED = False
+# Configurar banderas de hardware
+SENSOR_ENABLED = not (args.no_sensor or args.no_hardware)  # Sensor solo si no se especifica --no-sensor o --no-hardware
+HARDWARE_ENABLED = not args.no_hardware  # Hardware (servo/buzzer) solo si no se especifica --no-hardware
 
 try:
     if HARDWARE_ENABLED:
         import RPi.GPIO as GPIO
         GPIO_AVAILABLE = True
+        if not SENSOR_ENABLED:
+            print("[MODO PARCIAL] Sensor deshabilitado - Buzzer y servo activos")
     else:
         GPIO_AVAILABLE = False
-        print("[MODO SIMULACIÓN] Hardware deshabilitado - ejecutando sin sensores físicos")
+        print("[MODO SIMULACIÓN] Todo el hardware deshabilitado - ejecutando sin GPIO")
 except ImportError:
     GPIO_AVAILABLE = False
-    print("[ATENCIÓN] GPIO no disponible - ejecutando sin sensor")
+    SENSOR_ENABLED = False
+    print("[ATENCIÓN] GPIO no disponible - ejecutando en modo simulación completa")
 
 # Configuración del sensor ultrasónico
 TRIG_PIN = 17
@@ -175,7 +184,7 @@ class TestDaltonismoCompleto:
         self.current_options = []
         
         # Variables del sensor
-        self.user_nearby = False
+        self.user_nearby = not SENSOR_ENABLED  # Si sensor deshabilitado, usuario siempre "presente"
         self.sensor_thread = None
         self.running = True
         self.current_test = "waiting"  # waiting, colors, ishihara, results
@@ -964,8 +973,11 @@ class TestDaltonismoCompleto:
     # Funciones del sensor
     def get_distance(self):
         """Obtiene la distancia del sensor ultrasónico"""
+        if not SENSOR_ENABLED:
+            return 30  # Simular usuario siempre presente (distancia menor a MIN_DISTANCE)
+        
         if not GPIO_AVAILABLE:
-            return 50  # Simular usuario presente para pruebas
+            return 30  # Simular usuario presente para pruebas
         
         try:
             GPIO.output(TRIG_PIN, True)
@@ -990,6 +1002,15 @@ class TestDaltonismoCompleto:
     
     def start_sensor_monitoring(self):
         """Inicia el monitoreo del sensor en un hilo separado"""
+        # Si el sensor está deshabilitado, iniciar el test automáticamente
+        if not SENSOR_ENABLED:
+            print("[SENSOR] Sensor deshabilitado - iniciando test automáticamente")
+            self.user_nearby = True
+            self.update_proximity_indicator()
+            # Iniciar test después de un breve delay
+            self.root.after(1000, self.start_color_test)
+            return
+        
         def monitor():
             while self.running:
                 try:
@@ -1016,14 +1037,19 @@ class TestDaltonismoCompleto:
     
     def update_proximity_indicator(self):
         """Actualiza el indicador de proximidad"""
-        if self.user_nearby:
+        if not SENSOR_ENABLED:
             self.proximity_indicator.config(
-                text=" Usuario detectado ", 
+                text="🔧 Modo sin sensor - Test manual", 
+                fg="#2196F3"
+            )
+        elif self.user_nearby:
+            self.proximity_indicator.config(
+                text="✓ Usuario detectado ", 
                 fg="#4CAF50"
             )
         else:
             self.proximity_indicator.config(
-                text=" Esperando usuario...", 
+                text="⏳ Esperando usuario...", 
                 fg="#FF5722"
             )
     

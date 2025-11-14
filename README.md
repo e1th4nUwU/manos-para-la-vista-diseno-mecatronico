@@ -23,29 +23,30 @@ chmod +x scripts/ejecutar_test_completo.sh
 
 ## 💻 Modo Simulación (Sin Hardware)
 
-**¿Quieres probar el sistema sin Raspberry Pi ni sensores?**
+**¿Quieres probar el sistema sin Raspberry Pi o sin algún componente?**
 
-El sistema incluye un **modo simulación** que permite ejecutar el software completo sin hardware físico conectado. Ideal para:
-- Desarrollo en PC de escritorio/laptop
-- Testing de interfaz y lógica
-- Demos sin setup completo
-- Debugging sin hardware
+El sistema ofrece **múltiples modos de operación** según tu hardware disponible:
 
-### Activar modo simulación:
+### 🔧 Modo sin sensor (buzzer y servo SÍ funcionan)
+```bash
+python3 src/dalton.py --no-sensor
+```
+- ✅ **Buzzer SÍ suena** físicamente
+- ✅ **Servo SÍ se mueve** físicamente  
+- ❌ Sensor deshabilitado (test inicia automáticamente)
+- **Ideal para**: Desarrollo en Raspberry Pi cuando el sensor no está conectado
 
-**Método 1: Bandera de línea de comandos (Recomendado)** ⭐
+### 🖥️ Modo simulación completa (sin ningún hardware)
 ```bash
 python3 src/dalton.py --no-hardware
-
-# También disponibles:
-python3 src/dalton.py --no-sensor
-python3 src/dalton.py --simulation
 ```
+- ❌ Todo simulado (buzzer y servo solo imprimen en consola)
+- ❌ Sin GPIO requerido
+- **Ideal para**: Desarrollo en PC/laptop sin Raspberry Pi
 
-**Método 2: Editar código**
-Edita `src/dalton.py` línea 13:
-```python
-HARDWARE_ENABLED = False  # Cambiar a False para modo simulación
+### Ver ayuda:
+```bash
+python3 src/dalton.py --help
 ```
 
 📖 **Documentación completa**: Ver [`docs/MODO_SIMULACION.md`](docs/MODO_SIMULACION.md)

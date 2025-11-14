@@ -7,9 +7,7 @@ Conexión del Buzzer:
 - Pin negativo (-) del buzzer -> GND (cualquier pin GND, ej: Pin físico 14)
 
 Uso:
-    python3 test_buzzer.py                # Modo normal con GPIO
-    python3 test_buzzer.py --no-hardware  # Modo simulación
-    python3 test_buzzer.py --simulation   # Modo simulación (alias)
+    python3 test_buzzer.py
     
 Controles:
     - Presiona 1: Tono de éxito (agradable)
@@ -21,38 +19,10 @@ Controles:
 
 import time
 import sys
-import argparse
-
-# Parsear argumentos de línea de comandos
-parser = argparse.ArgumentParser(
-    description='Test de buzzer de 3V para Raspberry Pi GPIO',
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog='''
-Ejemplos de uso:
-  python3 test_buzzer.py                # Modo normal con GPIO
-  python3 test_buzzer.py --no-hardware  # Modo simulación
-  python3 test_buzzer.py --simulation   # Modo simulación (alias)
-    '''
-)
-parser.add_argument(
-    '--no-hardware', '--no-sensor', '--simulation',
-    dest='no_hardware',
-    action='store_true',
-    help='Ejecutar en modo simulación sin hardware físico (sin GPIO)'
-)
-
-args = parser.parse_args()
-
-# Determinar si usar GPIO basado en argumentos
-FORCE_SIMULATION = args.no_hardware
 
 try:
-    if not FORCE_SIMULATION:
-        import RPi.GPIO as GPIO
-        GPIO_AVAILABLE = True
-    else:
-        GPIO_AVAILABLE = False
-        print("[MODO SIMULACIÓN] Ejecutando sin hardware (bandera --no-hardware activa)")
+    import RPi.GPIO as GPIO
+    GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
     print("[ADVERTENCIA] RPi.GPIO no disponible - ejecutando en modo simulación")
