@@ -21,6 +21,9 @@ MIN_DISTANCE = 50  # Cambiado a 50 cm
 # Configuración del servo motor MG996R
 SERVO_PIN = 18  # GPIO18 (Pin físico 12)
 
+# Configuración del buzzer de 3V
+BUZZER_PIN = 23  # GPIO23 (Pin físico 16)
+
 # Colores básicos
 colors = {
     "Rojo": "#FF0000",
@@ -60,13 +63,14 @@ class IshiharaImageLoader:
                 image_path = os.path.join(self.image_directory, f"{filename}.{ext}")
                 if os.path.exists(image_path):
                     try:
-                        # Cargar y redimensionar imagen - Compacto para pantalla pequeña
+                        # Cargar y redimensionar imagen - 50% de la pantalla o más grande
                         img = Image.open(image_path)
-                        img = img.resize((250, 250), Image.LANCZOS)  # Tamaño compacto para pantallas pequeñas
+                        # El tamaño se ajustará dinámicamente en calculate_scaling()
+                        # Por ahora cargamos a tamaño original, se redimensionará después
                         
                         plate_data = {
                             "filename": filename,
-                            "image": img,
+                            "image": img,  # Guardar imagen original
                             "correct_answer": config["correct"],
                             "options": config["options"].copy(),
                             "difficulty": config["difficulty"]
@@ -151,6 +155,9 @@ class TestDaltonismoCompleto:
         self.servo_pwm = None
         self.current_servo_angle = 90  # Trackear posición actual
         
+        # Variable para control del buzzer
+        self.buzzer_pwm = None
+        
         # Configurar hardware
         self.setup_gpio()
         
@@ -188,13 +195,13 @@ class TestDaltonismoCompleto:
         
         # Tamaños de botones escalados
         self.button_sizes = {
-            'color_width': max(6, int(8 * self.scale_factor)),
-            'color_height': max(2, int(3 * self.scale_factor)),
+            'color_width': max(10, int(14 * self.scale_factor)),  # Mucho más ancho
+            'color_height': max(5, int(7 * self.scale_factor)),   # Mucho más alto
             'width': max(3, int(4 * self.scale_factor)),
             'height': max(1, int(2 * self.scale_factor)),
             'large_width': max(12, int(15 * self.scale_factor)),
-            'option_width': max(10, int(12 * self.scale_factor)),
-            'option_height': max(1, int(2 * self.scale_factor)),
+            'option_width': max(8, int(10 * self.scale_factor)),  # Más cuadrado
+            'option_height': max(6, int(8 * self.scale_factor)),  # Mucho más alto para cuadrado
             'restart_width': max(12, int(15 * self.scale_factor)),
             'restart_height': max(1, int(2 * self.scale_factor))
         }
@@ -207,12 +214,15 @@ class TestDaltonismoCompleto:
             'frame_height': max(60, int(80 * self.scale_factor))
         }
         
-        # Tamaño de imagen escalado
-        self.image_size = max(150, int(250 * self.scale_factor))
+        # Tamaño de imagen escalado - Mínimo 50% de la pantalla
+        min_image_percentage = 0.5  # 50% de la pantalla
+        max_dimension = min(self.screen_width, self.screen_height)
+        self.image_size = max(300, int(max_dimension * min_image_percentage))
         
         print(f"[ESCALADO] Pantalla: {self.screen_width}x{self.screen_height}")
         print(f"[ESCALADO] Factor: {self.scale_factor:.2f}")
         print(f"[ESCALADO] Fuente título: {self.fonts['title']}px")
+        print(f"[ESCALADO] Tamaño imagen Ishihara: {self.image_size}px")
 
     def setup_gpio(self):
         """Configuración inicial del GPIO"""
@@ -222,16 +232,21 @@ class TestDaltonismoCompleto:
                 GPIO.setup(TRIG_PIN, GPIO.OUT)
                 GPIO.setup(ECHO_PIN, GPIO.IN)
                 GPIO.setup(SERVO_PIN, GPIO.OUT)  # Configurar pin del servo
+                GPIO.setup(BUZZER_PIN, GPIO.OUT)  # Configurar pin del buzzer
                 GPIO.output(TRIG_PIN, False)
                 
                 # Inicializar PWM para el servo
                 self.servo_pwm = GPIO.PWM(SERVO_PIN, 50)  # 50Hz
                 self.servo_pwm.start(0)
                 
+                # Inicializar PWM para el buzzer
+                self.buzzer_pwm = GPIO.PWM(BUZZER_PIN, 1000)  # 1000Hz base
+                self.buzzer_pwm.start(0)
+                
                 # Posicionar servo en centro al inicio
                 self.set_servo_angle(90)
                 
-                print("[OK] GPIO configurado correctamente (sensor + servo)")
+                print("[OK] GPIO configurado correctamente (sensor + servo + buzzer)")
             except Exception as e:
                 print(f"[ERROR] Error configurando GPIO: {e}")
     
@@ -256,6 +271,42 @@ class TestDaltonismoCompleto:
             print(f"[SERVO] Movido a {angle}°")
         except Exception as e:
             print(f"[ERROR] Error moviendo servo: {e}")
+    
+    def play_buzzer_tone(self, frequency, duration):
+        """
+        Reproduce un tono en el buzzer
+        frequency: Frecuencia en Hz
+        duration: Duración en segundos
+        """
+        if not GPIO_AVAILABLE or self.buzzer_pwm is None:
+            print(f"[BUZZER-SIM] Simulando tono {frequency}Hz por {duration}s")
+            return
+        
+        try:
+            self.buzzer_pwm.ChangeFrequency(frequency)
+            self.buzzer_pwm.ChangeDutyCycle(50)  # 50% duty cycle
+            time.sleep(duration)
+            self.buzzer_pwm.ChangeDutyCycle(0)  # Detener sonido
+        except Exception as e:
+            print(f"[ERROR] Error reproduciendo tono: {e}")
+    
+    def buzzer_success(self):
+        """Melodía de éxito - Tonos ascendentes agradables"""
+        print("[BUZZER] Reproduciendo tono de éxito")
+        # Melodía ascendente: Do, Mi, Sol, Do alto
+        frequencies = [523, 659, 784, 1047]
+        for freq in frequencies:
+            self.play_buzzer_tone(freq, 0.15)
+            time.sleep(0.05)
+    
+    def buzzer_failure(self):
+        """Melodía de fallo - Tonos descendentes"""
+        print("[BUZZER] Reproduciendo tono de fallo")
+        # Melodía descendente
+        frequencies = [800, 600, 400, 250]
+        for freq in frequencies:
+            self.play_buzzer_tone(freq, 0.2)
+            time.sleep(0.05)
     
     def move_servo_result(self, satisfactory=True):
         """
@@ -375,12 +426,12 @@ class TestDaltonismoCompleto:
                 width=self.button_sizes['color_width'], 
                 height=self.button_sizes['color_height'],
                 command=lambda c=color_name: self.check_color_answer_with_animation(c),
-                bd=3, relief="raised", 
+                bd=4, relief="raised",  # Borde más grueso
                 cursor="hand2", 
                 bg=hex_code,  # El botón es del color que representa
                 activebackground=hex_code
             )
-            btn.pack(side=tk.LEFT, padx=15, pady=15)
+            btn.pack(side=tk.LEFT, padx=20, pady=20)  # Mayor espaciado
             self.color_buttons[color_name] = btn
             self.add_color_button_effects(btn, hex_code)
     
@@ -543,10 +594,12 @@ class TestDaltonismoCompleto:
                 self.current_ishihara_answer = current_plate["correct_answer"]
                 self.current_options = current_plate["options"]
                 
-                # Mostrar imagen con verificación
+                # Mostrar imagen con verificación - redimensionar dinámicamente
                 img = current_plate["image"]
                 if img:
-                    self.current_photo = ImageTk.PhotoImage(img)
+                    # Redimensionar a tamaño calculado (50% de pantalla o más)
+                    img_resized = img.resize((self.image_size, self.image_size), Image.LANCZOS)
+                    self.current_photo = ImageTk.PhotoImage(img_resized)
                     self.ishihara_image_label.config(image=self.current_photo)
                     
                     # Crear botones de opciones
@@ -598,12 +651,13 @@ class TestDaltonismoCompleto:
                 self.options_frame, 
                 text=str(option), 
                 font=("Arial", self.fonts['button'], "bold"),
-                width=self.button_sizes['large_width'], height=self.button_sizes['height'],
+                width=self.button_sizes['option_width'], 
+                height=self.button_sizes['option_height'],  # Ahora más alto, casi cuadrado
                 bg="white", fg="black",  # Sin colores para no invalidar el test
                 relief="raised", bd=3, cursor="hand2",
                 command=lambda opt=option: self.check_ishihara_answer(opt)
             )
-            btn.grid(row=i+1, column=0, pady=self.spacing['small'], padx=self.spacing['medium'], sticky="ew")
+            btn.grid(row=i+1, column=0, pady=self.spacing['medium'], padx=self.spacing['medium'], sticky="ew")
             self.option_buttons.append(btn)
             
             # Añadir efectos hover neutros
@@ -627,15 +681,21 @@ class TestDaltonismoCompleto:
                 return
             
             # Verificar respuesta
-            if chosen_answer == self.current_ishihara_answer:
+            is_correct = chosen_answer == self.current_ishihara_answer
+            if is_correct:
                 self.ishihara_score += 1
+                # Reproducir tono de éxito en un hilo separado para no bloquear UI
+                threading.Thread(target=self.buzzer_success, daemon=True).start()
+            else:
+                # Reproducir tono de fallo en un hilo separado para no bloquear UI
+                threading.Thread(target=self.buzzer_failure, daemon=True).start()
             
             print(f"[DEBUG] Respuesta: {chosen_answer}, Correcta: {self.current_ishihara_answer}, Puntaje: {self.ishihara_score}")
             
             # Efecto visual neutral en el botón seleccionado
             for btn in self.option_buttons:
                 if btn['text'] == str(chosen_answer):
-                    if chosen_answer == self.current_ishihara_answer:
+                    if is_correct:
                         btn.config(bg="darkgray", fg="white", relief="solid", bd=5)  # Gris oscuro para correcto
                     else:
                         btn.config(bg="gray", fg="white", relief="solid", bd=5)  # Gris claro para incorrecto
@@ -661,13 +721,19 @@ class TestDaltonismoCompleto:
             return
         
         # Verificar respuesta
-        if chosen_color == self.current_color_name:
+        is_correct = chosen_color == self.current_color_name
+        if is_correct:
             self.color_score += 1
+            # Reproducir tono de éxito en un hilo separado para no bloquear UI
+            threading.Thread(target=self.buzzer_success, daemon=True).start()
+        else:
+            # Reproducir tono de fallo en un hilo separado para no bloquear UI
+            threading.Thread(target=self.buzzer_failure, daemon=True).start()
         
         # Efecto visual neutral - mantener colores del botón
         btn = self.color_buttons[chosen_color]
         
-        if chosen_color == self.current_color_name:
+        if is_correct:
             # Correcto: borde más grueso y sólido
             btn.config(relief="solid", bd=6)
         else:
@@ -934,8 +1000,11 @@ class TestDaltonismoCompleto:
             # Detener PWM del servo
             if self.servo_pwm:
                 self.servo_pwm.stop()
+            # Detener PWM del buzzer
+            if self.buzzer_pwm:
+                self.buzzer_pwm.stop()
             GPIO.cleanup()
-            print("[OK] GPIO y servo limpiados")
+            print("[OK] GPIO, servo y buzzer limpiados")
     
     def toggle_fullscreen(self):
         """Alternar entre pantalla completa y ventana"""
