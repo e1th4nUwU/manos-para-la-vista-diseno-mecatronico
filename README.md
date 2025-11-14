@@ -11,15 +11,44 @@ Sistema completo de detección de daltonismo que combina:
 
 ### 1. Instalar dependencias automáticamente:
 ```bash
-chmod +x instalar_dependencias.sh
-./instalar_dependencias.sh
+chmod +x scripts/instalar_dependencias.sh
+./scripts/instalar_dependencias.sh
 ```
 
 ### 2. Ejecutar el test:
 ```bash
-chmod +x ejecutar_test_completo.sh
-./ejecutar_test_completo.sh
+chmod +x scripts/ejecutar_test_completo.sh
+./scripts/ejecutar_test_completo.sh
 ```
+
+## 💻 Modo Simulación (Sin Hardware)
+
+**¿Quieres probar el sistema sin Raspberry Pi ni sensores?**
+
+El sistema incluye un **modo simulación** que permite ejecutar el software completo sin hardware físico conectado. Ideal para:
+- Desarrollo en PC de escritorio/laptop
+- Testing de interfaz y lógica
+- Demos sin setup completo
+- Debugging sin hardware
+
+### Activar modo simulación:
+
+**Método 1: Bandera de línea de comandos (Recomendado)** ⭐
+```bash
+python3 src/dalton.py --no-hardware
+
+# También disponibles:
+python3 src/dalton.py --no-sensor
+python3 src/dalton.py --simulation
+```
+
+**Método 2: Editar código**
+Edita `src/dalton.py` línea 13:
+```python
+HARDWARE_ENABLED = False  # Cambiar a False para modo simulación
+```
+
+📖 **Documentación completa**: Ver [`docs/MODO_SIMULACION.md`](docs/MODO_SIMULACION.md)
 
 ## 🔌 Conexiones del Sensor HC-SR04
 
@@ -100,12 +129,21 @@ pip3 install --user pillow numpy
 
 ### Ejecución directa:
 ```bash
-python3 dalton_completo.py
+# Con hardware (Raspberry Pi)
+python3 src/dalton.py
+
+# Sin hardware (modo simulación)
+python3 src/dalton.py --no-hardware
 ```
 
 ### Con script completo:
 ```bash
-./ejecutar_test_completo.sh
+./scripts/ejecutar_test_completo.sh
+```
+
+### Ver ayuda:
+```bash
+python3 src/dalton.py --help
 ```
 
 ## 💡 Optimizaciones para Raspberry Pi

@@ -6,12 +6,46 @@ import threading
 from PIL import Image, ImageTk
 import os
 import glob
+import argparse
+import sys
+
+# ============================================================================
+# CONFIGURACIÓN DE HARDWARE - Cambiar a False para ejecutar sin hardware físico
+# ============================================================================
+# Parsear argumentos de línea de comandos
+parser = argparse.ArgumentParser(
+    description='Test de Daltonismo con sensor ultrasónico, servo motor y buzzer',
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog='''
+Ejemplos de uso:
+  python3 dalton.py                    # Modo normal con hardware
+  python3 dalton.py --no-hardware      # Modo simulación (sin GPIO)
+  python3 dalton.py --no-sensor        # Alias para --no-hardware
+  python3 dalton.py --simulation       # Alias para --no-hardware
+    '''
+)
+parser.add_argument(
+    '--no-hardware', '--no-sensor', '--simulation',
+    dest='no_hardware',
+    action='store_true',
+    help='Ejecutar en modo simulación sin hardware físico (sin GPIO, sensores, servo, buzzer)'
+)
+
+args = parser.parse_args()
+
+# Configurar HARDWARE_ENABLED basado en argumentos de línea de comandos
+HARDWARE_ENABLED = not args.no_hardware  # Si --no-hardware está presente, HARDWARE_ENABLED = False
+
 try:
-    import RPi.GPIO as GPIO
-    GPIO_AVAILABLE = True
+    if HARDWARE_ENABLED:
+        import RPi.GPIO as GPIO
+        GPIO_AVAILABLE = True
+    else:
+        GPIO_AVAILABLE = False
+        print("[MODO SIMULACIÓN] Hardware deshabilitado - ejecutando sin sensores físicos")
 except ImportError:
     GPIO_AVAILABLE = False
-    print("[ATENCION] GPIO no disponible - ejecutando sin sensor")
+    print("[ATENCIÓN] GPIO no disponible - ejecutando sin sensor")
 
 # Configuración del sensor ultrasónico
 TRIG_PIN = 17
