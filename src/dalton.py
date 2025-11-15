@@ -89,7 +89,7 @@ class IshiharaImageLoader:
         # Definir respuestas correctas para cada imagen
         plates_config = {
             "12": {"correct": 12, "options": [12, 17, 21, "No veo nada"], "difficulty": "easy"},
-            "13": {"correct": 13, "options": [13, 15, 18, "No veo nada"], "difficulty": "easy"}, 
+            "13": {"correct": 73, "options": [73, 13, 78, "No veo nada"], "difficulty": "easy"}, 
             "16": {"correct": 16, "options": [16, 19, 18, "No veo nada"], "difficulty": "medium"},
             "29": {"correct": 29, "options": [29, 70, 20, "No veo nada"], "difficulty": "medium"},
             "42": {"correct": 42, "options": [42, 24, 74, "No veo nada"], "difficulty": "hard"},
@@ -236,6 +236,7 @@ class TestDaltonismoCompleto:
             'counter': max(16, int(24 * self.scale_factor)),  # Contador más grande
             'button': max(14, int(20 * self.scale_factor)),  # Botones más grandes
             'button_small': max(12, int(16 * self.scale_factor)),
+            'option_button': max(20, int(28 * self.scale_factor)),  # Texto grande para opciones Ishihara
             'results': max(18, int(24 * self.scale_factor)),  # Resultados más grandes
             'results_title': max(18, int(32 * self.scale_factor))
         }
@@ -247,8 +248,8 @@ class TestDaltonismoCompleto:
             'width': max(3, int(4 * self.scale_factor)),
             'height': max(1, int(2 * self.scale_factor)),
             'large_width': max(12, int(15 * self.scale_factor)),
-            'option_width': max(8, int(10 * self.scale_factor)),  # Botones cuadrados
-            'option_height': max(8, int(10 * self.scale_factor)),  # Mismo valor para cuadrado
+            'option_width': max(16, int(20 * self.scale_factor)),  # Botones rectangulares anchos
+            'option_height': max(4, int(5 * self.scale_factor)),   # Menor altura para forma rectangular
             'restart_width': max(12, int(15 * self.scale_factor)),
             'restart_height': max(1, int(2 * self.scale_factor))
         }
@@ -261,8 +262,8 @@ class TestDaltonismoCompleto:
             'frame_height': max(60, int(80 * self.scale_factor))
         }
         
-        # Tamaño de imagen escalado - 75% de la pantalla para mejor visibilidad
-        min_image_percentage = 0.75  # 75% de la pantalla
+        # Tamaño de imagen escalado - 70% de la pantalla para que no se corte
+        min_image_percentage = 0.70  # 70% de la pantalla (ajustado para que no se corte)
         max_dimension = min(self.screen_width, self.screen_height)
         self.image_size = max(300, int(max_dimension * min_image_percentage))
         
@@ -511,20 +512,11 @@ class TestDaltonismoCompleto:
         
         # Título del test - Escalado automático
         self.ishihara_title = tk.Label(
-            self.ishihara_frame, text=" Test de Láminas Ishihara", 
+            self.ishihara_frame, text="¿Qué número ves?", 
             font=("Arial", self.fonts['title'], "bold"),
             fg="#FF5722", bg="white"
         )
         self.ishihara_title.pack(pady=self.spacing['medium'])
-        
-        # Instrucciones - Escalado automático
-        self.ishihara_instructions = tk.Label(
-            self.ishihara_frame, 
-            text="¿Qué número ves?", 
-            font=("Arial", self.fonts['button'], "bold"),
-            fg="#333", bg="white"
-        )
-        self.ishihara_instructions.pack(pady=self.spacing['small'])
         
         # Eliminado: contador de progreso Ishihara
         
@@ -539,7 +531,7 @@ class TestDaltonismoCompleto:
         
         # Frame para la imagen (lado izquierdo)
         self.image_frame = tk.Frame(self.content_frame, bg="white")
-        self.image_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.image_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
         
         # Imagen de la lámina
         self.ishihara_image_label = tk.Label(
@@ -712,9 +704,9 @@ class TestDaltonismoCompleto:
             btn = tk.Button(
                 self.options_frame, 
                 text=str(option), 
-                font=("Arial", self.fonts['button'], "bold"),
+                font=("Arial", self.fonts['option_button'], "bold"),
                 width=self.button_sizes['option_width'], 
-                height=self.button_sizes['option_height'],  # Botones cuadrados
+                height=self.button_sizes['option_height'],  # Botones rectangulares
                 bg="white", fg="black",  # Sin colores para no invalidar el test
                 relief="raised", bd=3, cursor="hand2",
                 command=lambda opt=option: self.check_ishihara_answer(opt)
@@ -956,8 +948,13 @@ class TestDaltonismoCompleto:
         self.setup_color_test_ui()
         self.setup_ishihara_test_ui()
         
-        # Volver a pantalla de espera
-        self.show_waiting_screen()
+        # Si el sensor está deshabilitado, ir directo al test
+        if not SENSOR_ENABLED:
+            self.user_nearby = True
+            self.start_color_test()
+        else:
+            # Volver a pantalla de espera
+            self.show_waiting_screen()
     
     # Funciones de animación
     def animate_text_fade(self, widget, text, steps=10):
