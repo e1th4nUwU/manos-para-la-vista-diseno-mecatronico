@@ -67,6 +67,14 @@ SERVO_PIN = 18  # GPIO18 (Pin físico 12)
 # Configuración del buzzer de 3V
 BUZZER_PIN = 23  # GPIO23 (Pin físico 16)
 
+# Configuración de la tira RGB de 5V (ÁNODO COMÚN)
+# Conexión: 5V común (pin de alimentación) + R, G, B a GPIO (pines a tierra)
+# Lógica INVERTIDA: LOW = encendido, HIGH = apagado
+RGB_RED_PIN = 24    # GPIO24 (Pin físico 18)
+RGB_GREEN_PIN = 25  # GPIO25 (Pin físico 22)
+RGB_BLUE_PIN = 8    # GPIO8 (Pin físico 24)
+# 5V común -> Conectar a pin 5V (ej: Pin físico 2 o 4)
+
 # Colores básicos
 colors = {
     "Rojo": "#FF0000",
@@ -201,6 +209,11 @@ class TestDaltonismoCompleto:
         # Variable para control del buzzer
         self.buzzer_pwm = None
         
+        # Variables para control de la tira RGB
+        self.rgb_red_pwm = None
+        self.rgb_green_pwm = None
+        self.rgb_blue_pwm = None
+        
         # Configurar hardware
         self.setup_gpio()
         
@@ -281,6 +294,9 @@ class TestDaltonismoCompleto:
                 GPIO.setup(ECHO_PIN, GPIO.IN)
                 GPIO.setup(SERVO_PIN, GPIO.OUT)  # Configurar pin del servo
                 GPIO.setup(BUZZER_PIN, GPIO.OUT)  # Configurar pin del buzzer
+                GPIO.setup(RGB_RED_PIN, GPIO.OUT)    # Configurar pin rojo RGB
+                GPIO.setup(RGB_GREEN_PIN, GPIO.OUT)  # Configurar pin verde RGB
+                GPIO.setup(RGB_BLUE_PIN, GPIO.OUT)   # Configurar pin azul RGB
                 GPIO.output(TRIG_PIN, False)
                 
                 # Inicializar PWM para el servo
@@ -291,10 +307,23 @@ class TestDaltonismoCompleto:
                 self.buzzer_pwm = GPIO.PWM(BUZZER_PIN, 1000)  # 1000Hz base
                 self.buzzer_pwm.start(0)
                 
+                # Inicializar PWM para la tira RGB (100Hz es suficiente para RGB)
+                self.rgb_red_pwm = GPIO.PWM(RGB_RED_PIN, 100)
+                self.rgb_green_pwm = GPIO.PWM(RGB_GREEN_PIN, 100)
+                self.rgb_blue_pwm = GPIO.PWM(RGB_BLUE_PIN, 100)
+                
+                # Iniciar PWM con duty cycle 0
+                self.rgb_red_pwm.start(0)
+                self.rgb_green_pwm.start(0)
+                self.rgb_blue_pwm.start(0)
+                
                 # Posicionar servo en centro al inicio
                 self.set_servo_angle(90)
                 
-                print("[OK] GPIO configurado correctamente (sensor + servo + buzzer)")
+                # Encender LED azul al inicio
+                self.set_rgb_color(0, 0, 100)  # Azul al 100%
+                
+                print("[OK] GPIO configurado correctamente (sensor + servo + buzzer + RGB)")
             except Exception as e:
                 print(f"[ERROR] Error configurando GPIO: {e}")
     
@@ -383,6 +412,69 @@ class TestDaltonismoCompleto:
     def buzzer_failure(self):
         """Alias para buzzer_pip_incorrect"""
         self.buzzer_pip_incorrect()
+    
+    # ============================================================================
+    # FUNCIONES DE CONTROL DE TIRA RGB
+    # ============================================================================
+    
+    def set_rgb_color(self, red_duty, green_duty, blue_duty):
+        """
+        Establece el color de la tira RGB (ánodo común - lógica invertida)
+        red_duty, green_duty, blue_duty: 0-100 (porcentaje de brillo)
+        
+        NOTA: Tira RGB de ánodo común (5V común, pines R/G/B a tierra)
+        - Para encender: duty cycle ALTO (100 = totalmente encendido)
+        - La inversión se hace internamente: 100-duty_cycle
+        """
+        if not HARDWARE_ENABLED or not all([self.rgb_red_pwm, self.rgb_green_pwm, self.rgb_blue_pwm]):
+            print(f"[RGB-SIM] Simulando color RGB: R={red_duty}% G={green_duty}% B={blue_duty}%")
+            return
+        
+        try:
+            # INVERTIR la lógica para ánodo común:
+            # 100% brillo = 100% duty cycle (pin LOW máximo tiempo)
+            # 0% brillo = 0% duty cycle (pin HIGH máximo tiempo)
+            inverted_red = 100 - red_duty
+            inverted_green = 100 - green_duty
+            inverted_blue = 100 - blue_duty
+            
+            self.rgb_red_pwm.ChangeDutyCycle(inverted_red)
+            self.rgb_green_pwm.ChangeDutyCycle(inverted_green)
+            self.rgb_blue_pwm.ChangeDutyCycle(inverted_blue)
+            print(f"[RGB] Color establecido: R={red_duty}% G={green_duty}% B={blue_duty}% (invertido para ánodo común)")
+        except Exception as e:
+            print(f"[ERROR] Error estableciendo color RGB: {e}")
+    
+    def rgb_blink_blue(self, times=3):
+        """
+        Parpadea azul al inicio de un test
+        times: número de parpadeos
+        """
+        def blink():
+            print(f"[RGB] Parpadeando azul {times} veces")
+            for _ in range(times):
+                self.set_rgb_color(0, 0, 0)    # Apagar
+                time.sleep(0.2)
+                self.set_rgb_color(0, 0, 100)  # Azul
+                time.sleep(0.2)
+        
+        # Ejecutar en thread separado para no bloquear
+        threading.Thread(target=blink, daemon=True).start()
+    
+    def rgb_set_blue(self):
+        """Establece color azul (estado por defecto)"""
+        print("[RGB] Estableciendo azul")
+        self.set_rgb_color(0, 0, 100)
+    
+    def rgb_set_green(self):
+        """Establece color verde (resultado satisfactorio)"""
+        print("[RGB] Estableciendo verde (resultado satisfactorio)")
+        self.set_rgb_color(0, 100, 0)
+    
+    def rgb_set_red(self):
+        """Establece color rojo (resultado insatisfactorio)"""
+        print("[RGB] Estableciendo rojo (resultado insatisfactorio)")
+        self.set_rgb_color(100, 0, 0)
     
     def move_servo_result(self, satisfactory=True):
         """
@@ -562,6 +654,9 @@ class TestDaltonismoCompleto:
         self.current_test = "colors"
         self.test_indicator.config(text="✓ Test de Colores")
         
+        # Parpadear LED azul al inicio del test
+        self.rgb_blink_blue(times=3)
+        
         # Mostrar frame de colores
         self.ishihara_frame.pack_forget()
         self.main_frame.pack(expand=True, fill=tk.BOTH)
@@ -609,6 +704,9 @@ class TestDaltonismoCompleto:
         print(f"[DEBUG] Cambiando a test Ishihara con {len(self.ishihara_plates)} laminas")
         self.current_test = "ishihara"
         self.test_indicator.config(text="✓ Test Ishihara")
+        
+        # Parpadear LED azul al inicio del test
+        self.rgb_blink_blue(times=3)
         
         # Cambiar a frame de Ishihara
         self.main_frame.pack_forget()
@@ -871,6 +969,12 @@ class TestDaltonismoCompleto:
             is_satisfactory = overall_percentage >= 75  # Umbral para resultado satisfactorio
             print(f"[RESULTADO] Puntuacion: {overall_percentage:.1f}% - {'SATISFACTORIO' if is_satisfactory else 'INSATISFACTORIO'}")
             
+            # Cambiar color del LED RGB según resultado
+            if is_satisfactory:
+                self.rgb_set_green()  # Verde para resultado satisfactorio
+            else:
+                self.rgb_set_red()    # Rojo para resultado insatisfactorio
+            
             # Reproducir tonada según resultado
             if GPIO_AVAILABLE and self.buzzer_pwm:
                 if is_satisfactory:
@@ -938,6 +1042,9 @@ class TestDaltonismoCompleto:
         self.color_score = 0
         self.ishihara_attempt = 0
         self.ishihara_score = 0
+        
+        # Volver LED RGB a azul
+        self.rgb_set_blue()
         
         # Limpiar pantalla
         for widget in self.root.winfo_children():
