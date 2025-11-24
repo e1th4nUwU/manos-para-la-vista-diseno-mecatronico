@@ -1,309 +1,262 @@
-# Test Completo de Daltonismo con Sensor Ultrasónico
+# 👁️ Sistema de Detección de Daltonismo - Manos Para la Vista
 
-## 🎯 Descripción
-Sistema completo de detección de daltonismo que combina:
-- **Test de colores básicos** (8 rondas)
-- **Test de láminas Ishihara** generadas dinámicamente (6 láminas)
-- **Sensor ultrasónico HC-SR04** para detección de proximidad
-- **Diagnóstico combinado** con alta precisión
+![Logo](img/logo.png)
+
+Sistema profesional de detección de daltonismo para Raspberry Pi con hardware especializado y reportes automáticos vía Telegram.
+
+## 🎯 Características
+
+- 🎨 **Test de colores básicos** (8 rondas)
+- 👁️ **Test de láminas Ishihara** (6 láminas)
+- 📡 **Sensor ultrasónico HC-SR04** (detección automática de proximidad)
+- 🔊 **Buzzer 3V** (feedback auditivo con pips)
+- 🔄 **Servo motor MG996R** (indicador visual de resultados)
+- 💡 **Tira LED RGB 5V** (feedback por colores: azul/verde/rojo)
+- 📄 **Reportes PDF** automáticos
+- 📱 **Envío a Telegram** de resultados
+- 🖥️ **Interfaz táctil fullscreen** optimizada
+
+---
 
 ## 🚀 Instalación Rápida
 
-### 1. Instalar dependencias automáticamente:
-```bash
+\`\`\`bash
+# Clonar el repositorio
+git clone https://github.com/e1th4nUwU/manos-para-la-vista-diseno-mecatronico.git
+cd manos-para-la-vista-diseno-mecatronico
+
+# Instalar dependencias
 chmod +x scripts/instalar_dependencias.sh
 ./scripts/instalar_dependencias.sh
-```
 
-### 2. Ejecutar el test:
-```bash
-chmod +x scripts/ejecutar_test_completo.sh
-./scripts/ejecutar_test_completo.sh
-```
+# Configurar Telegram (opcional)
+nano src/.env
+# Agregar: TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID
 
-## 💻 Modo Simulación (Sin Hardware)
+# Ejecutar
+python3 src/dalton.py
+\`\`\`
 
-**¿Quieres probar el sistema sin Raspberry Pi o sin algún componente?**
+---
 
-El sistema ofrece **múltiples modos de operación** según tu hardware disponible:
+## 🔧 Hardware Requerido
 
-### 🔧 Modo sin sensor (buzzer y servo SÍ funcionan)
-```bash
+| Componente             | Modelo         | Pin GPIO                            | Pin Físico |
+| ---------------------- | -------------- | ----------------------------------- | ---------- |
+| **Sensor ultrasónico** | HC-SR04        | TRIG: GPIO17<br>ECHO: GPIO27        | 11, 13     |
+| **Servo motor**        | MG996R         | GPIO18                              | 12         |
+| **Buzzer**             | 3V activo      | GPIO23                              | 16         |
+| **LED RGB**            | 5V ánodo común | R: GPIO24<br>G: GPIO25<br>B: GPIO21 | 18, 22, 40 |
+
+### Diagrama de Conexiones
+
+\`\`\`
+┌──────────────────────────────────────────────────┐
+│           Raspberry Pi GPIO Header               │
+│                                                  │
+│  3V3  (1) (2)  5V  ◄──── HC-SR04 VCC            │
+│       (3) (4)  5V  ◄──── Servo VCC / RGB Común  │
+│       (5) (6)  GND ◄──── HC-SR04 GND            │
+│ GPIO17(11)(12) GPIO18 ◄──── Servo Signal        │
+│ GPIO27(13)(14) GND ◄──── Servo GND              │
+│       (15)(16) GPIO23 ◄──── Buzzer VCC          │
+│       (17)(18) GPIO24 ◄──── RGB Red             │
+│       (19)(20) GND ◄──── Buzzer GND             │
+│       (21)(22) GPIO25 ◄──── RGB Green           │
+│       (...)                                     │
+│       (39)(40) GPIO21 ◄──── RGB Blue            │
+└──────────────────────────────────────────────────┘
+\`\`\`
+
+⚠️ **Importante**: 
+- LED RGB es **ánodo común** (común a 5V, canales a GPIO)
+- HC-SR04 requiere **5V** (no 3.3V)
+- Servo puede necesitar alimentación externa
+
+---
+
+## 🎮 Modos de Operación
+
+### Modo Completo (con todo el hardware)
+\`\`\`bash
+python3 src/dalton.py
+\`\`\`
+
+### Modo Sin Sensor (buzzer, servo y RGB activos)
+\`\`\`bash
 python3 src/dalton.py --no-sensor
-```
-- ✅ **Buzzer SÍ suena** físicamente
-- ✅ **Servo SÍ se mueve** físicamente  
-- ❌ Sensor deshabilitado (test inicia automáticamente)
-- **Ideal para**: Desarrollo en Raspberry Pi cuando el sensor no está conectado
+\`\`\`
 
-### 🖥️ Modo simulación completa (sin ningún hardware)
-```bash
+### Modo Simulación (sin hardware, para desarrollo en PC)
+\`\`\`bash
 python3 src/dalton.py --no-hardware
-```
-- ❌ Todo simulado (buzzer y servo solo imprimen en consola)
-- ❌ Sin GPIO requerido
-- **Ideal para**: Desarrollo en PC/laptop sin Raspberry Pi
+\`\`\`
 
-### Ver ayuda:
-```bash
-python3 src/dalton.py --help
-```
+---
 
-📖 **Documentación completa**: Ver [`docs/MODO_SIMULACION.md`](docs/MODO_SIMULACION.md)
+## 📱 Configuración de Telegram
 
-## 🔌 Conexiones del Sensor HC-SR04
+1. **Crear bot**: Buscar \`@BotFather\` en Telegram y crear un bot
+2. **Obtener Chat ID**: Enviar mensaje al bot y visitar:
+   \`\`\`
+   https://api.telegram.org/bot<TOKEN>/getUpdates
+   \`\`\`
+3. **Configurar \`.env\`**: Editar \`src/.env\`:
+   \`\`\`env
+   TELEGRAM_BOT_TOKEN=tu_token_aqui
+   TELEGRAM_CHAT_ID=tu_chat_id_aqui
+   ENV=production
+   \`\`\`
 
-```
-Raspberry Pi          HC-SR04
-Pin 2 (5V)     -----> VCC
-Pin 6 (GND)    -----> GND  
-Pin 11 (GPIO17)-----> Trig
-Pin 13 (GPIO27)-----> Echo
-```
+📖 **Guía completa**: Ver [\`docs/TELEGRAM_SETUP.md\`](docs/TELEGRAM_SETUP.md)
 
-### Diagrama visual:
-```
-    ┌─────────────┐
-    │   HC-SR04   │
-    │             │
-    │ VCC GND Trig Echo │
-    │  │   │   │    │ │
-    └──┼───┼───┼────┼─┘
-       │   │   │    │
-       │   │   │    └── Pin 13 (GPIO27)
-       │   │   └─────── Pin 11 (GPIO17)  
-       │   └─────────── Pin 6 (GND)
-       └─────────────── Pin 2 (5V)
-```
+---
 
-## 📋 Características del Test
+## 🎨 Sistema de Feedback
 
-### 🎨 Test de Colores Básicos
-- **8 rondas** de identificación
-- Colores: Rojo, Verde, Azul, Amarillo, Naranja, Morado
-- Detección de confusiones básicas de color
-- Interfaz táctil optimizada
+### 🔊 Buzzer (GPIO23)
+- **1 pip**: Respuesta correcta (1200 Hz)
+- **2 pips**: Respuesta incorrecta (800 Hz)
+- **3 pips**: Inicio de test (1500 Hz)
 
-### 👁️ Test de Láminas Ishihara
-- **6 láminas** generadas automáticamente
-- Números del 0-9 para responder
-- Diferentes tipos de daltonismo:
-  - **Protanopia** (dificultad rojo-verde)
-  - **Deuteranopia** (dificultad verde-rojo)  
-  - **Tritanopia** (dificultad azul-amarillo)
-- Opción "No veo ningún número"
+### 🔄 Servo (GPIO18)
+- **180°**: Visión normal (≥85%)
+- **135°**: Deficiencia leve (75-84%)
+- **90°**: Deficiencia moderada (65-74%)
+- **0°**: Deficiencia severa (<65%)
 
-### 📡 Sensor de Proximidad
-- **Detección automática** a menos de 1 metro
-- **Pausa inteligente** si el usuario se aleja
-- **Pantalla de espera** con información en tiempo real
-- **Modo simulación** en sistemas sin GPIO
+### 💡 LED RGB (ánodo común)
+- **🔵 Azul**: Sistema listo / en progreso
+- **🟢 Verde**: Resultado positivo (≥75%)
+- **🔴 Rojo**: Resultado negativo (<75%)
+
+### 📡 Sensor (GPIO17/27)
+- **Umbral**: 50 cm
+- **Pausa automática** si el usuario se aleja
+- **Continúa automáticamente** al regresar
+
+---
+
+## 📄 Reportes PDF
+
+Los reportes se generan automáticamente al finalizar cada test:
+
+**Contenido:**
+- Logo del proyecto
+- Fecha y hora
+- Resultados detallados (Colores + Ishihara)
+- Evaluación diagnóstica
+- Recomendaciones
+
+**Ubicación:** \`reports/reporte_daltonismo_YYYYMMDD_HHMMSS.pdf\`
+
+**Telegram:** Si está configurado, se envía automáticamente al chat/grupo
+
+---
 
 ## 📊 Sistema de Diagnóstico
 
-### Puntuación combinada:
-- **≥85%**: ✅ Visión de colores normal
-- **70-84%**: ⚠️ Posible daltonismo leve
-- **50-69%**: 🔶 Probable daltonismo moderado  
-- **<50%**: 🔴 Probable daltonismo severo
+| Puntuación | Diagnóstico            | Servo | LED        |
+| ---------- | ---------------------- | ----- | ---------- |
+| **≥85%**   | ✅ Visión normal        | 180°  | 🟢 Verde    |
+| **75-84%** | ⚠️ Deficiencia leve     | 135°  | 🟡 Amarillo |
+| **65-74%** | 🔶 Deficiencia moderada | 90°   | 🟠 Naranja  |
+| **<65%**   | 🔴 Deficiencia severa   | 0°    | 🔴 Rojo     |
 
-### Recomendaciones automáticas:
-- Normal: Sin signos de daltonismo
-- Leve: Consulta con especialista recomendada
-- Moderado: Evaluación oftalmológica necesaria
-- Severo: Consulta urgente requerida
-
-## 🛠️ Instalación Manual
-
-### Dependencias del sistema:
-```bash
-sudo apt update
-sudo apt install -y python3-pip python3-tk python3-pil python3-pil.imagetk python3-numpy python3-rpi.gpio
-```
-
-### Librerías Python:
-```bash
-pip3 install --user pillow numpy
-```
-
-## 🚀 Uso
-
-### Ejecución directa:
-```bash
-# Con hardware (Raspberry Pi)
-python3 src/dalton.py
-
-# Sin hardware (modo simulación)
-python3 src/dalton.py --no-hardware
-```
-
-### Con script completo:
-```bash
-./scripts/ejecutar_test_completo.sh
-```
-
-### Ver ayuda:
-```bash
-python3 src/dalton.py --help
-```
-
-## 💡 Optimizaciones para Raspberry Pi
-
-### Pantalla táctil:
-- ✅ Botones grandes (optimizados para dedos)
-- ✅ Efectos hover compatibles con touch
-- ✅ Interfaz fullscreen automática
-- ✅ Navegación intuitiva
-
-### Rendimiento:
-- ✅ Generación eficiente de láminas Ishihara
-- ✅ Gestión optimizada de memoria
-- ✅ Threading para sensor no bloqueante
-- ✅ Limpieza automática de recursos GPIO
-
-## 🔧 Configuración Avanzada
-
-### Ajustar distancia del sensor:
-```python
-# En dalton_completo.py línea 15
-MIN_DISTANCE = 100  # Cambiar a distancia deseada en cm
-```
-
-### Modificar cantidad de tests:
-```python
-# En la clase TestDaltonismoCompleto
-self.color_attempts = 8      # Rondas de colores
-self.ishihara_attempts = 6   # Láminas Ishihara
-```
-
-### Cambiar pines GPIO:
-```python
-# En dalton_completo.py líneas 13-14
-TRIG_PIN = 17  # Pin Trigger
-ECHO_PIN = 27  # Pin Echo
-```
-
-## 🐛 Solución de Problemas
-
-### Error "No module named 'PIL'":
-```bash
-pip3 install --user Pillow
-```
-
-### Error "No module named 'RPi.GPIO'":
-```bash
-sudo apt install python3-rpi.gpio
-```
-
-### Sensor no funciona:
-1. Verificar conexiones físicas
-2. Comprobar voltaje (5V para VCC)
-3. Revisar permisos GPIO
-4. Ejecutar como sudo si es necesario
-
-### Problemas de interfaz:
-```bash
-sudo apt install python3-tk python3-pil.imagetk
-```
+---
 
 ## 📁 Estructura del Proyecto
 
-```
-daltonismo-test/
-├── src/                        # Código fuente principal
-│   ├── dalton.py              # Programa principal del test
-│   ├── stats.py               # Análisis estadístico
-│   ├── test.py                # Módulo de pruebas
-│   └── data.csv               # Datos de prueba
-├── assets/                     # Recursos del proyecto
-│   └── images/                # Láminas Ishihara y capturas
-│       ├── 12.jpg, 13.png, etc.
-│       └── Screenshot_*.png
-├── scripts/                    # Scripts de automatización
-│   ├── instalar_dependencias.sh
-│   ├── ejecutar_test_completo.sh
-│   ├── crear_ejecutable.sh
-│   ├── ejecutar_test.sh
-│   └── verificar_test.sh
-├── config/                     # Archivos de configuración
-│   ├── dalton.spec            # Configuración PyInstaller
-│   └── TestDaltonismo.spec
-├── docs/                       # Documentación del proyecto
-├── tests/                      # Tests automatizados
-├── build/                      # Archivos de compilación (ignorado)
-├── dist/                       # Distribución (ignorado)
-├── venv/                       # Entorno virtual (ignorado)
-├── requirements.txt            # Dependencias Python
-├── setup.py                    # Configuración de instalación
-├── LICENSE                     # Licencia del proyecto
-├── CHANGELOG.md               # Registro de cambios
-├── .gitignore                 # Archivos ignorados por Git
-└── README.md                  # Este archivo
-```
+\`\`\`
+manos-para-la-vista-diseno-mecatronico/
+├── src/
+│   ├── dalton.py              # Programa principal
+│   ├── lib/Notification.py    # Reportes PDF y Telegram
+│   └── .env                   # Configuración Telegram
+├── assets/images/             # Láminas Ishihara
+├── img/logo.png               # Logo del proyecto
+├── docs/                      # Documentación detallada
+├── scripts/                   # Scripts de automatización
+├── tests/                     # Tests automatizados
+└── reports/                   # PDFs generados
+\`\`\`
 
-## 🎉 Características Especiales
+---
 
-### � Reinicio inteligente:
-- Mantiene configuración de sensor
-- Limpia recursos correctamente
-- Resetea variables de estado
+## 📚 Documentación Adicional
 
-### 🎨 Animaciones suaves:
-- Transiciones de pantalla fluidas
-- Efectos visuales para feedback
-- Indicadores de progreso animados
+- [\`docs/MODO_SIMULACION.md\`](docs/MODO_SIMULACION.md) - Guía de modos sin hardware
+- [\`docs/TELEGRAM_SETUP.md\`](docs/TELEGRAM_SETUP.md) - Configuración de Telegram
+- [\`docs/OPTIMIZACIONES_RASPBERRY_PI.md\`](docs/OPTIMIZACIONES_RASPBERRY_PI.md) - Tips de rendimiento
+- [\`CHANGELOG.md\`](CHANGELOG.md) - Historial de versiones
+- [\`CONTRIBUTING.md\`](CONTRIBUTING.md) - Guía de contribución
 
-### 📱 Interfaz adaptativa:
-- Responsive para diferentes resoluciones
-- Optimizada para pantallas táctiles
-- Navegación por botones grandes
+---
 
-### 🛡️ Gestión de errores:
-- Manejo robusto de excepciones GPIO
-- Fallback a modo simulación
-- Recuperación automática de errores
+## 🔧 Solución Rápida de Problemas
 
-## � Desarrollo
+**Sensor no detecta:**
+\`\`\`bash
+python3 src/dalton.py --no-sensor  # Usar modo sin sensor
+\`\`\`
 
-### Configurar entorno de desarrollo:
+**Sin hardware disponible:**
+\`\`\`bash
+python3 src/dalton.py --no-hardware  # Modo simulación
+\`\`\`
 
-```bash
-# Clonar el repositorio
-git clone <url-del-repositorio>
-cd daltonismo-test
+**Error de módulos:**
+\`\`\`bash
+pip3 install -r requirements.txt
+\`\`\`
 
-# Crear entorno virtual
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# o en Windows: venv\Scripts\activate
+**Permisos GPIO:**
+\`\`\`bash
+sudo usermod -a -G gpio \$USER
+# O ejecutar con sudo
+\`\`\`
 
-# Instalar dependencias de desarrollo
-pip install -r requirements.txt
+---
 
-# Ejecutar tests
-python -m pytest tests/
+## ⚠️ Disclaimer
 
-# Formatear código
-black src/
-flake8 src/
-```
+> Este sistema es para **propósitos educativos y de screening preliminar**. NO sustituye un examen oftalmológico profesional.
 
-### Estructura de desarrollo:
-- `src/`: Código fuente principal
-- `tests/`: Tests unitarios y de integración
-- `docs/`: Documentación técnica
-- `scripts/`: Scripts de automatización y deployment
-- `config/`: Archivos de configuración
+**Casos de uso apropiados:**
+- ✅ Proyectos educativos y ferias de ciencias
+- ✅ Talleres de concientización
+- ✅ Screening preliminar en escuelas
+- ❌ NO para diagnósticos médicos oficiales
 
-### Contribuir:
-1. Fork del repositorio
-2. Crear rama para nueva funcionalidad (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit de cambios (`git commit -am 'Añadir nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
+---
 
-## �📞 Información Adicional
+## 📜 Licencia
 
-Este sistema está diseñado específicamente para uso médico/educativo en Raspberry Pi con pantallas táctiles. La combinación de tests de colores básicos y láminas Ishihara proporciona una evaluación más completa y precisa del daltonismo.
+Este proyecto está bajo la [Licencia MIT](LICENSE).
 
-**⚠️ Nota importante**: Este test es para propósitos educativos y de screening. Para diagnósticos médicos oficiales, siempre consulte con un profesional de la salud visual.
+---
+
+## 🙏 Créditos
+
+Desarrollado por el equipo **Manos Para la Vista** - Diseño Mecatrónico
+
+**Tecnologías:**
+Python 3 • Tkinter • RPi.GPIO • Pillow • ReportLab • python-telegram-bot
+
+**Basado en:** Láminas Ishihara (Dr. Shinobu Ishihara, 1917)
+
+## 📞 Soporte
+
+**Reportar bugs:** [GitHub Issues](https://github.com/e1th4nUwU/manos-para-la-vista-diseno-mecatronico/issues)
+
+---
+
+<div align="center">
+
+**⭐ Si este proyecto te fue útil, considera darle una estrella en GitHub ⭐**
+
+[![GitHub stars](https://img.shields.io/github/stars/e1th4nUwU/manos-para-la-vista-diseno-mecatronico?style=social)](https://github.com/e1th4nUwU/manos-para-la-vista-diseno-mecatronico)
+
+### Hecho con ❤️ por el equipo Manos Para la Vista
+
+</div>

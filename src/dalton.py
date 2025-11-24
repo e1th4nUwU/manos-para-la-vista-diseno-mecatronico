@@ -8,6 +8,25 @@ import os
 import glob
 import argparse
 import sys
+import asyncio
+from datetime import datetime
+
+# Import notification service for PDF reports
+try:
+    # Intentar import relativo primero
+    try:
+        from lib.Notification import DaltonismReportGenerator
+    except ImportError:
+        # Si falla, agregar el directorio actual al path
+        import sys
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, current_dir)
+        from lib.Notification import DaltonismReportGenerator
+    NOTIFICATION_AVAILABLE = True
+except ImportError as e:
+    print(f"[WARNING] Notification module not available - PDF reports disabled: {e}")
+    NOTIFICATION_AVAILABLE = False
 
 # ============================================================================
 # CONFIGURACIÓN DE HARDWARE
@@ -72,7 +91,7 @@ BUZZER_PIN = 23  # GPIO23 (Pin físico 16)
 # Lógica INVERTIDA: LOW = encendido, HIGH = apagado
 RGB_RED_PIN = 24    # GPIO24 (Pin físico 18)
 RGB_GREEN_PIN = 25  # GPIO25 (Pin físico 22)
-RGB_BLUE_PIN = 8    # GPIO8 (Pin físico 24)
+RGB_BLUE_PIN = 21    # GPIO8 (Pin físico 40)
 # 5V común -> Conectar a pin 5V (ej: Pin físico 2 o 4)
 
 # Colores básicos
@@ -1013,6 +1032,31 @@ class TestDaltonismoCompleto:
             
             # Actualizar indicador
             self.test_indicator.config(text=" Test Completado")
+            
+            # Generar y enviar reporte PDF a Telegram
+            if NOTIFICATION_AVAILABLE:
+                try:
+                    # Preparar datos del test
+                    test_results = {
+                        'color_score': self.color_score,
+                        'color_attempts': self.color_attempts,
+                        'ishihara_score': self.ishihara_score,
+                        'ishihara_attempts': self.ishihara_attempts,
+                        'timestamp': datetime.now().strftime('%Y%m%d_%H%M%S'),
+                        'patient_id': f'TEST_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+                    }
+                    
+                    # Enviar reporte en thread separado para no bloquear UI
+                    def send_report():
+                        try:
+                            asyncio.run(DaltonismReportGenerator.generate_and_send_report(test_results))
+                            print("[TELEGRAM] Reporte enviado exitosamente")
+                        except Exception as e:
+                            print(f"[ERROR] Error enviando reporte a Telegram: {e}")
+                    
+                    threading.Thread(target=send_report, daemon=True).start()
+                except Exception as e:
+                    print(f"[ERROR] Error preparando reporte: {e}")
         
         except Exception as e:
             print(f"[ERROR] Error mostrando resultados: {e}")

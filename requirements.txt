@@ -3,6 +3,11 @@ Pillow>=10.0.0
 numpy>=1.24.0
 RPi.GPIO>=0.7.1; sys_platform == "linux"
 
+# Telegram notifications and PDF generation
+python-telegram-bot==20.7
+reportlab>=4.0.0
+python-dotenv>=1.0.0
+
 # Development and build tools
 pyinstaller>=5.13.0
 
