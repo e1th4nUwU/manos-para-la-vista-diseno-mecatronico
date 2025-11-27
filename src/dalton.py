@@ -91,7 +91,7 @@ BUZZER_PIN = 23  # GPIO23 (Pin físico 16)
 # Lógica INVERTIDA: LOW = encendido, HIGH = apagado
 RGB_RED_PIN = 24    # GPIO24 (Pin físico 18)
 RGB_GREEN_PIN = 25  # GPIO25 (Pin físico 22)
-RGB_BLUE_PIN = 21    # GPIO8 (Pin físico 40)
+RGB_BLUE_PIN = 16    # GPIO8 (Pin físico 36)
 # 5V común -> Conectar a pin 5V (ej: Pin físico 2 o 4)
 
 # Colores básicos
