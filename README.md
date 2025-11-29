@@ -20,7 +20,7 @@ Sistema profesional de detección de daltonismo para Raspberry Pi con hardware e
 
 ## 🚀 Instalación Rápida
 
-\`\`\`bash
+```bash
 # Clonar el repositorio
 git clone https://github.com/e1th4nUwU/manos-para-la-vista-diseno-mecatronico.git
 cd manos-para-la-vista-diseno-mecatronico
@@ -35,7 +35,7 @@ nano src/.env
 
 # Ejecutar
 python3 src/dalton.py
-\`\`\`
+```
 
 ---
 
@@ -50,7 +50,7 @@ python3 src/dalton.py
 
 ### Diagrama de Conexiones
 
-\`\`\`
+```
 ┌──────────────────────────────────────────────────┐
 │           Raspberry Pi GPIO Header               │
 │                                                  │
@@ -66,7 +66,7 @@ python3 src/dalton.py
 │       (...)                                     │
 │       (39)(40) GPIO21 ◄──── RGB Blue            │
 └──────────────────────────────────────────────────┘
-\`\`\`
+```
 
 ⚠️ **Importante**: 
 - LED RGB es **ánodo común** (común a 5V, canales a GPIO)
@@ -78,37 +78,37 @@ python3 src/dalton.py
 ## 🎮 Modos de Operación
 
 ### Modo Completo (con todo el hardware)
-\`\`\`bash
+```bash
 python3 src/dalton.py
-\`\`\`
+```
 
 ### Modo Sin Sensor (buzzer, servo y RGB activos)
-\`\`\`bash
+```bash
 python3 src/dalton.py --no-sensor
-\`\`\`
+```
 
 ### Modo Simulación (sin hardware, para desarrollo en PC)
-\`\`\`bash
+```bash
 python3 src/dalton.py --no-hardware
-\`\`\`
+```
 
 ---
 
 ## 📱 Configuración de Telegram
 
-1. **Crear bot**: Buscar \`@BotFather\` en Telegram y crear un bot
+1. **Crear bot**: Buscar `@BotFather` en Telegram y crear un bot
 2. **Obtener Chat ID**: Enviar mensaje al bot y visitar:
-   \`\`\`
+   ```
    https://api.telegram.org/bot<TOKEN>/getUpdates
-   \`\`\`
-3. **Configurar \`.env\`**: Editar \`src/.env\`:
-   \`\`\`env
+   ```
+3. **Configurar `.env`**: Editar `src/.env`:
+   ```env
    TELEGRAM_BOT_TOKEN=tu_token_aqui
    TELEGRAM_CHAT_ID=tu_chat_id_aqui
    ENV=production
-   \`\`\`
+   ```
 
-📖 **Guía completa**: Ver [\`docs/TELEGRAM_SETUP.md\`](docs/TELEGRAM_SETUP.md)
+📖 **Guía completa**: Ver [`docs/TELEGRAM_SETUP.md`](docs/TELEGRAM_SETUP.md)
 
 ---
 
@@ -148,7 +148,7 @@ Los reportes se generan automáticamente al finalizar cada test:
 - Evaluación diagnóstica
 - Recomendaciones
 
-**Ubicación:** \`reports/reporte_daltonismo_YYYYMMDD_HHMMSS.pdf\`
+**Ubicación:** `reports/reporte_daltonismo_YYYYMMDD_HHMMSS.pdf`
 
 **Telegram:** Si está configurado, se envía automáticamente al chat/grupo
 
@@ -167,7 +167,7 @@ Los reportes se generan automáticamente al finalizar cada test:
 
 ## 📁 Estructura del Proyecto
 
-\`\`\`
+```
 manos-para-la-vista-diseno-mecatronico/
 ├── src/
 │   ├── dalton.py              # Programa principal
@@ -179,42 +179,42 @@ manos-para-la-vista-diseno-mecatronico/
 ├── scripts/                   # Scripts de automatización
 ├── tests/                     # Tests automatizados
 └── reports/                   # PDFs generados
-\`\`\`
+```
 
 ---
 
 ## 📚 Documentación Adicional
 
-- [\`docs/MODO_SIMULACION.md\`](docs/MODO_SIMULACION.md) - Guía de modos sin hardware
-- [\`docs/TELEGRAM_SETUP.md\`](docs/TELEGRAM_SETUP.md) - Configuración de Telegram
-- [\`docs/OPTIMIZACIONES_RASPBERRY_PI.md\`](docs/OPTIMIZACIONES_RASPBERRY_PI.md) - Tips de rendimiento
-- [\`CHANGELOG.md\`](CHANGELOG.md) - Historial de versiones
-- [\`CONTRIBUTING.md\`](CONTRIBUTING.md) - Guía de contribución
+- [`docs/MODO_SIMULACION.md`](docs/MODO_SIMULACION.md) - Guía de modos sin hardware
+- [`docs/TELEGRAM_SETUP.md`](docs/TELEGRAM_SETUP.md) - Configuración de Telegram
+- [`docs/OPTIMIZACIONES_RASPBERRY_PI.md`](docs/OPTIMIZACIONES_RASPBERRY_PI.md) - Tips de rendimiento
+- [`CHANGELOG.md`](CHANGELOG.md) - Historial de versiones
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) - Guía de contribución
 
 ---
 
 ## 🔧 Solución Rápida de Problemas
 
 **Sensor no detecta:**
-\`\`\`bash
+```bash
 python3 src/dalton.py --no-sensor  # Usar modo sin sensor
-\`\`\`
+```
 
 **Sin hardware disponible:**
-\`\`\`bash
+```bash
 python3 src/dalton.py --no-hardware  # Modo simulación
-\`\`\`
+```
 
 **Error de módulos:**
-\`\`\`bash
+```bash
 pip3 install -r requirements.txt
-\`\`\`
+```
 
 **Permisos GPIO:**
-\`\`\`bash
+```bash
 sudo usermod -a -G gpio \$USER
 # O ejecutar con sudo
-\`\`\`
+```
 
 ---
 
