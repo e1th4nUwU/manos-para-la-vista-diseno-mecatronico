@@ -1,0 +1,83 @@
+@startuml Firmware_Test_Daltonismo
+
+skinparam backgroundColor #1a1a2e
+skinparam defaultFontColor white
+skinparam activityBackgroundColor #2d2d44
+skinparam activityBorderColor #00d4ff
+skinparam activityDiamondBackgroundColor #3d3d5c
+skinparam activityDiamondBorderColor #7b2cbf
+
+title Test de Daltonismo - Flujo del Firmware
+
+start
+
+:Iniciar Sistema;
+
+:Configurar GPIO;
+
+:LED Azul + Servo Centro;
+
+if (Sensor habilitado?) then (si)
+  :Esperar usuario < 50cm;
+else (no)
+  :Modo directo;
+endif
+
+:Test de Colores\n(8 rondas);
+
+repeat
+  :Mostrar color aleatorio;
+  :Usuario selecciona;
+  if (Correcto?) then (si)
+    :Buzzer OK;
+  else (no)
+    :Buzzer Error;
+  endif
+repeat while (Quedan rondas?)
+
+:Test Ishihara\n(6 laminas);
+
+repeat
+  :Mostrar lamina;
+  :Usuario selecciona opcion;
+  if (Correcto?) then (si)
+    :Buzzer OK;
+  else (no)
+    :Buzzer Error;
+  endif
+repeat while (Quedan laminas?)
+
+:Calcular resultado;
+
+if (Puntaje >= 75%?) then (si)
+  :LED Verde;
+  :Servo Izquierda;
+  :Melodia alegre;
+else (no)
+  :LED Rojo;
+  :Servo Derecha;
+  :Melodia triste;
+endif
+
+:Mostrar resultados;
+
+if (Telegram activo?) then (si)
+  :Enviar PDF;
+endif
+
+:Reiniciar o Fin;
+
+stop
+
+legend right
+  |= Pin |= Componente |
+  | GPIO17 | HC-SR04 TRIG |
+  | GPIO27 | HC-SR04 ECHO |
+  | GPIO18 | Servo MG996R |
+  | GPIO23 | Buzzer 3V |
+  | GPIO24 | LED Rojo |
+  | GPIO25 | LED Verde |
+  | GPIO16 | LED Azul |
+endlegend
+
+@enduml

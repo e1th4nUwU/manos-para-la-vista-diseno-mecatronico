@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Componentes Mecatrónicos - Test de Daltonismo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        /* Category Cards */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: linear-gradient(145deg, #2d2d44, #1f1f35);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid #3d3d5c;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+        }
+
+        .category-header {
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #3d3d5c;
+        }
+
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .icon-ui { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .icon-mechanism { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .icon-sensor { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .icon-controller { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .icon-actuators { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .icon-software { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+
+        .category-title {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .category-subtitle {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .category-content {
+            padding: 20px 25px;
+        }
+
+        .component-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 3px solid;
+            transition: background 0.3s ease;
+        }
+
+        .component-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .component-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .component-item.ui { border-color: #667eea; }
+        .component-item.mechanism { border-color: #f5576c; }
+        .component-item.sensor { border-color: #00f2fe; }
+        .component-item.controller { border-color: #43e97b; }
+        .component-item.actuator { border-color: #fa709a; }
+        .component-item.software { border-color: #a8edea; }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .component-model {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .component-description {
+            font-size: 0.9em;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .component-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .spec-tag {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            color: #ccc;
+        }
+
+        /* Summary Table */
+        .summary-section {
+            background: linear-gradient(145deg, #2d2d44, #1f1f35);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid #3d3d5c;
+            margin-top: 20px;
+        }
+
+        .summary-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
+            border-radius: 2px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .summary-table thead th {
+            background: linear-gradient(90deg, rgba(0,212,255,0.2), rgba(123,44,191,0.2));
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 2px solid #00d4ff;
+        }
+
+        .summary-table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+        .summary-table tbody tr:nth-child(even) {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .summary-table tbody tr:hover {
+            background: rgba(0,212,255,0.1);
+        }
+
+        .summary-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #3d3d5c;
+        }
+
+        .summary-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .badge-ui { background: rgba(102, 126, 234, 0.3); color: #667eea; }
+        .badge-mechanism { background: rgba(245, 87, 108, 0.3); color: #f5576c; }
+        .badge-sensor { background: rgba(0, 242, 254, 0.3); color: #00f2fe; }
+        .badge-controller { background: rgba(67, 233, 123, 0.3); color: #43e97b; }
+        .badge-actuator { background: rgba(250, 112, 154, 0.3); color: #fa709a; }
+        .badge-software { background: rgba(168, 237, 234, 0.3); color: #a8edea; }
+
+        /* System Diagram */
+        .system-diagram {
+            margin-top: 40px;
+            background: linear-gradient(145deg, #2d2d44, #1f1f35);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid #3d3d5c;
+        }
+
+        .diagram-title {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #00d4ff;
+            text-align: center;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .flow-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px 25px;
+            text-align: center;
+            min-width: 140px;
+            border: 2px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .flow-box:hover {
+            transform: scale(1.05);
+        }
+
+        .flow-box.input { border-color: #00f2fe; }
+        .flow-box.process { border-color: #43e97b; }
+        .flow-box.output { border-color: #fa709a; }
+
+        .flow-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .flow-label {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .flow-sublabel {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .summary-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Componentes Mecatrónicos</h1>
+        <p class="subtitle">Sistema de Test de Daltonismo - Arquitectura del Hardware</p>
+
+        <!-- Categories Grid -->
+        <div class="categories-grid">
+            <!-- Interfaz de Usuario -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-ui">🖥️</div>
+                    <div>
+                        <div class="category-title">Interfaz de Usuario</div>
+                        <div class="category-subtitle">Interacción humano-máquina</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item ui">
+                        <div class="component-name">
+                            Pantalla Táctil
+                        </div>
+                        <div class="component-description">
+                            Display con capacidad táctil capacitiva para interacción directa con la interfaz gráfica del test de daltonismo.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">📺 Conexión HDMI</span>
+                            <span class="spec-tag">👆 USB Touch</span>
+                            <span class="spec-tag">🔌 USB Power</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mecanismo -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-mechanism">⚙️</div>
+                    <div>
+                        <div class="category-title">Mecanismo</div>
+                        <div class="category-subtitle">Sistema mecánico de movimiento</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item mechanism">
+                        <div class="component-name">
+                            Eje Rotatorio de la Mano
+                        </div>
+                        <div class="component-description">
+                            Mecanismo que permite la rotación controlada de la mano modelo para las pruebas de visión. Accionado por servomotor con control preciso de posición angular.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">🔄 Rotación controlada</span>
+                            <span class="spec-tag">📐 Posicionamiento preciso</span>
+                            <span class="spec-tag">🦾 Acoplamiento servo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-sensor">📡</div>
+                    <div>
+                        <div class="category-title">Sensor</div>
+                        <div class="category-subtitle">Detección y medición</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item sensor">
+                        <div class="component-name">
+                            Sensor de Proximidad Ultrasónico
+                            <span class="component-model">HC-SR04</span>
+                        </div>
+                        <div class="component-description">
+                            Sensor ultrasónico para detección de proximidad del usuario. Utiliza ondas de sonido de alta frecuencia para medir distancias y detectar presencia.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">📏 Rango: 2-400 cm</span>
+                            <span class="spec-tag">⚡ 5V DC</span>
+                            <span class="spec-tag">🎯 Precisión: 3mm</span>
+                            <span class="spec-tag">📍 GPIO17/27</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controlador -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-controller">🧠</div>
+                    <div>
+                        <div class="category-title">Controlador</div>
+                        <div class="category-subtitle">Unidad de procesamiento central</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item controller">
+                        <div class="component-name">
+                            Raspberry Pi
+                            <span class="component-model">Model B v1.2</span>
+                        </div>
+                        <div class="component-description">
+                            Computadora de placa única que actúa como controlador central del sistema. Ejecuta el software de pruebas y gestiona todos los periféricos conectados.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">🔧 40 pines GPIO</span>
+                            <span class="spec-tag">🐧 Raspberry Pi OS</span>
+                            <span class="spec-tag">🐍 Python 3</span>
+                            <span class="spec-tag">⚡ 5V/3A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actuadores -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-actuators">⚡</div>
+                    <div>
+                        <div class="category-title">Actuadores</div>
+                        <div class="category-subtitle">Elementos de salida y respuesta</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item actuator">
+                        <div class="component-name">
+                            Servomotor
+                            <span class="component-model">MG996R</span>
+                        </div>
+                        <div class="component-description">
+                            Motor con control de posición angular para el movimiento del eje de la mano. Alto torque para movimientos precisos.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">💪 Torque: 11 kg·cm</span>
+                            <span class="spec-tag">📐 0-180°</span>
+                            <span class="spec-tag">📍 GPIO18 (PWM)</span>
+                        </div>
+                    </div>
+                    <div class="component-item actuator">
+                        <div class="component-name">
+                            LED RGB
+                            <span class="component-model">Ánodo Común 5V</span>
+                        </div>
+                        <div class="component-description">
+                            LED multicolor para indicación visual de estados del sistema. Permite mostrar diferentes colores mediante mezcla RGB.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">🔴 GPIO24</span>
+                            <span class="spec-tag">🟢 GPIO25</span>
+                            <span class="spec-tag">🔵 GPIO16</span>
+                            <span class="spec-tag">⚡ 5V común</span>
+                        </div>
+                    </div>
+                    <div class="component-item actuator">
+                        <div class="component-name">
+                            Buzzer
+                            <span class="component-model">Activo 3V</span>
+                        </div>
+                        <div class="component-description">
+                            Emisor de sonido para retroalimentación auditiva. Proporciona alertas y confirmaciones sonoras durante el test.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">🔊 Tono fijo</span>
+                            <span class="spec-tag">📍 GPIO23</span>
+                            <span class="spec-tag">⚡ 3.3V</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Software -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon icon-software">💻</div>
+                    <div>
+                        <div class="category-title">Software</div>
+                        <div class="category-subtitle">Programas y scripts del sistema</div>
+                    </div>
+                </div>
+                <div class="category-content">
+                    <div class="component-item software">
+                        <div class="component-name">
+                            Programa Principal
+                            <span class="component-model">Python</span>
+                        </div>
+                        <div class="component-description">
+                            Aplicación principal que implementa el test de daltonismo con interfaz gráfica Tkinter, lógica de pruebas Ishihara y control de hardware GPIO.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">🎨 Tkinter GUI</span>
+                            <span class="spec-tag">🔧 RPi.GPIO</span>
+                            <span class="spec-tag">📊 Estadísticas</span>
+                        </div>
+                    </div>
+                    <div class="component-item software">
+                        <div class="component-name">
+                            Scripts de Utilidad
+                            <span class="component-model">Bash</span>
+                        </div>
+                        <div class="component-description">
+                            Conjunto de scripts para instalación de dependencias, diagnósticos, creación de ejecutables y mantenimiento del sistema.
+                        </div>
+                        <div class="component-specs">
+                            <span class="spec-tag">📦 Instalación</span>
+                            <span class="spec-tag">🔍 Diagnósticos</span>
+                            <span class="spec-tag">🚀 Ejecución</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Table -->
+        <div class="summary-section">
+            <h2 class="summary-title">Tabla Resumen de Componentes</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Componente</th>
+                        <th>Modelo/Tipo</th>
+                        <th>Función Principal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="category-badge badge-ui">Interfaz</span></td>
+                        <td>Pantalla Táctil</td>
+                        <td>Display táctil capacitivo</td>
+                        <td>Interacción con el usuario</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-mechanism">Mecanismo</span></td>
+                        <td>Eje Rotatorio</td>
+                        <td>Acoplamiento mecánico</td>
+                        <td>Rotación de la mano modelo</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-sensor">Sensor</span></td>
+                        <td>Sensor Ultrasónico</td>
+                        <td>HC-SR04</td>
+                        <td>Detección de proximidad</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-controller">Controlador</span></td>
+                        <td>Raspberry Pi</td>
+                        <td>Model B v1.2</td>
+                        <td>Procesamiento y control central</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-actuator">Actuador</span></td>
+                        <td>Servomotor</td>
+                        <td>MG996R</td>
+                        <td>Movimiento del eje</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-actuator">Actuador</span></td>
+                        <td>LED RGB</td>
+                        <td>Ánodo Común 5V</td>
+                        <td>Indicación visual</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-actuator">Actuador</span></td>
+                        <td>Buzzer</td>
+                        <td>Activo 3V</td>
+                        <td>Retroalimentación auditiva</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-software">Software</span></td>
+                        <td>Programa Principal</td>
+                        <td>Python 3 + Tkinter</td>
+                        <td>Lógica del test y GUI</td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-badge badge-software">Software</span></td>
+                        <td>Scripts de Sistema</td>
+                        <td>Bash</td>
+                        <td>Utilidades y mantenimiento</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- System Flow Diagram -->
+        <div class="system-diagram">
+            <h2 class="diagram-title">🔄 Diagrama de Flujo del Sistema</h2>
+            <div class="flow-diagram">
+                <div class="flow-box input">
+                    <div class="flow-icon">📡</div>
+                    <div class="flow-label">ENTRADA</div>
+                    <div class="flow-sublabel">Sensor HC-SR04<br>Pantalla Táctil</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box process">
+                    <div class="flow-icon">🧠</div>
+                    <div class="flow-label">PROCESO</div>
+                    <div class="flow-sublabel">Raspberry Pi<br>Software Python</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box output">
+                    <div class="flow-icon">⚡</div>
+                    <div class="flow-label">SALIDA</div>
+                    <div class="flow-sublabel">Servo • LED • Buzzer<br>Pantalla</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>📋 <a href="diagrama_conexiones.html">Ver Diagrama de Conexiones GPIO</a></p>
+            <p style="margin-top: 10px;">Test de Daltonismo - Sistema Mecatrónico</p>
+        </div>
+    </div>
+</body>
+</html>

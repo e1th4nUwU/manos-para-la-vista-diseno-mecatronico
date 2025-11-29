@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Conexiones - Test de Daltonismo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .diagram-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        /* Raspberry Pi Section */
+        .raspberry-section {
+            background: linear-gradient(145deg, #2d2d44, #1f1f35);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid #3d3d5c;
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #00d4ff;
+            border-radius: 2px;
+        }
+        
+        /* GPIO Pinout Diagram */
+        .gpio-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .gpio-board {
+            background: #1a472a;
+            border-radius: 15px;
+            padding: 15px;
+            border: 3px solid #2d5a3d;
+            position: relative;
+        }
+        
+        .gpio-header {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+        
+        .pin {
+            width: 38px;
+            height: 28px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .pin:hover {
+            transform: scale(1.15);
+            z-index: 10;
+        }
+        
+        .pin-3v3 { background: #ff6b6b; color: white; }
+        .pin-5v { background: #ee5a24; color: white; }
+        .pin-gnd { background: #2d3436; color: white; border: 1px solid #636e72; }
+        .pin-gpio { background: #00b894; color: white; }
+        .pin-gpio-used { background: #0984e3; color: white; box-shadow: 0 0 10px #0984e3; }
+        .pin-special { background: #6c5ce7; color: white; }
+        .pin-unused { background: #636e72; color: white; }
+        
+        .pin-row {
+            display: flex;
+            gap: 4px;
+            margin: 2px 0;
+        }
+        
+        /* Pin Labels */
+        .pin-label {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .pin:hover .pin-label {
+            opacity: 1;
+        }
+        
+        /* Components */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .component-card {
+            background: linear-gradient(145deg, #252540, #1a1a30);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .component-card.sensor { border-color: #00b894; }
+        .component-card.servo { border-color: #0984e3; }
+        .component-card.buzzer { border-color: #fdcb6e; }
+        .component-card.rgb { border-color: #e84393; }
+        .component-card.display { border-color: #00d4ff; }
+        .component-card.power { border-color: #ee5a24; }
+        
+        .component-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .component-icon {
+            font-size: 1.5em;
+        }
+        
+        .pin-list {
+            list-style: none;
+            font-size: 0.9em;
+        }
+        
+        .pin-list li {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .pin-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .pin-number {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        /* Connection Lines Visual */
+        .connection-visual {
+            background: linear-gradient(145deg, #252540, #1a1a30);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .wire {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 0.95em;
+        }
+        
+        .wire-color {
+            width: 40px;
+            height: 8px;
+            border-radius: 4px;
+            margin-right: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .wire-red { background: linear-gradient(90deg, #ff6b6b, #ee5a24); }
+        .wire-black { background: linear-gradient(90deg, #2d3436, #000); }
+        .wire-green { background: linear-gradient(90deg, #00b894, #00cec9); }
+        .wire-blue { background: linear-gradient(90deg, #0984e3, #74b9ff); }
+        .wire-yellow { background: linear-gradient(90deg, #fdcb6e, #f9ca24); }
+        .wire-orange { background: linear-gradient(90deg, #e17055, #d63031); }
+        .wire-purple { background: linear-gradient(90deg, #a29bfe, #6c5ce7); }
+        .wire-white { background: linear-gradient(90deg, #dfe6e9, #b2bec3); }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        /* Summary Table */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .summary-table th,
+        .summary-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .summary-table th {
+            background: rgba(0,212,255,0.1);
+            color: #00d4ff;
+        }
+        
+        .summary-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        /* Notes */
+        .notes {
+            background: linear-gradient(145deg, #2d2d44, #1f1f35);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #fdcb6e;
+        }
+        
+        .notes h3 {
+            color: #fdcb6e;
+            margin-bottom: 15px;
+        }
+        
+        .notes ul {
+            list-style: none;
+        }
+        
+        .notes li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .notes li::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .component-card,
+            .raspberry-section,
+            .connection-visual,
+            .notes {
+                background: #f5f5f5;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Diagrama de Conexiones</h1>
+        <p class="subtitle">Sistema de Detección de Daltonismo - Raspberry Pi 4</p>
+        
+        <div class="diagram-container">
+            <!-- Raspberry Pi GPIO Section -->
+            <div class="raspberry-section" style="flex: 1; min-width: 350px;">
+                <div class="section-title">Raspberry Pi 4 - GPIO Header</div>
+                
+                <div class="gpio-container">
+                    <div class="gpio-board">
+                        <!-- GPIO Header 40 pins -->
+                        <div class="gpio-header">
+                            <!-- Row by row, left pin then right pin -->
+                            <!-- Pins 1-2 -->
+                            <div class="pin-row">
+                                <div class="pin pin-3v3">1<span class="pin-label">3.3V Power</span></div>
+                                <div class="pin pin-5v">2<span class="pin-label">5V Power</span></div>
+                            </div>
+                            <!-- Pins 3-4 -->
+                            <div class="pin-row">
+                                <div class="pin pin-special">3<span class="pin-label">GPIO2 (SDA)</span></div>
+                                <div class="pin pin-5v">4<span class="pin-label">5V Power → RGB Común</span></div>
+                            </div>
+                            <!-- Pins 5-6 -->
+                            <div class="pin-row">
+                                <div class="pin pin-special">5<span class="pin-label">GPIO3 (SCL)</span></div>
+                                <div class="pin pin-gnd">6<span class="pin-label">GND → HC-SR04 GND</span></div>
+                            </div>
+                            <!-- Pins 7-8 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">7<span class="pin-label">GPIO4</span></div>
+                                <div class="pin pin-unused">8<span class="pin-label">GPIO14 (TXD)</span></div>
+                            </div>
+                            <!-- Pins 9-10 -->
+                            <div class="pin-row">
+                                <div class="pin pin-gnd">9<span class="pin-label">GND</span></div>
+                                <div class="pin pin-unused">10<span class="pin-label">GPIO15 (RXD)</span></div>
+                            </div>
+                            <!-- Pins 11-12 -->
+                            <div class="pin-row">
+                                <div class="pin pin-gpio-used">11<span class="pin-label">GPIO17 → TRIG (HC-SR04)</span></div>
+                                <div class="pin pin-gpio-used">12<span class="pin-label">GPIO18 → SERVO (MG996R)</span></div>
+                            </div>
+                            <!-- Pins 13-14 -->
+                            <div class="pin-row">
+                                <div class="pin pin-gpio-used">13<span class="pin-label">GPIO27 → ECHO (HC-SR04)</span></div>
+                                <div class="pin pin-gnd">14<span class="pin-label">GND → Servo GND</span></div>
+                            </div>
+                            <!-- Pins 15-16 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">15<span class="pin-label">GPIO22</span></div>
+                                <div class="pin pin-gpio-used">16<span class="pin-label">GPIO23 → BUZZER (+)</span></div>
+                            </div>
+                            <!-- Pins 17-18 -->
+                            <div class="pin-row">
+                                <div class="pin pin-3v3">17<span class="pin-label">3.3V Power</span></div>
+                                <div class="pin pin-gpio-used">18<span class="pin-label">GPIO24 → RGB RED</span></div>
+                            </div>
+                            <!-- Pins 19-20 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">19<span class="pin-label">GPIO10 (MOSI)</span></div>
+                                <div class="pin pin-gnd">20<span class="pin-label">GND → Buzzer GND</span></div>
+                            </div>
+                            <!-- Pins 21-22 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">21<span class="pin-label">GPIO9 (MISO)</span></div>
+                                <div class="pin pin-gpio-used">22<span class="pin-label">GPIO25 → RGB GREEN</span></div>
+                            </div>
+                            <!-- Pins 23-24 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">23<span class="pin-label">GPIO11 (SCLK)</span></div>
+                                <div class="pin pin-unused">24<span class="pin-label">GPIO8 (CE0)</span></div>
+                            </div>
+                            <!-- Pins 25-26 -->
+                            <div class="pin-row">
+                                <div class="pin pin-gnd">25<span class="pin-label">GND</span></div>
+                                <div class="pin pin-unused">26<span class="pin-label">GPIO7 (CE1)</span></div>
+                            </div>
+                            <!-- Pins 27-28 -->
+                            <div class="pin-row">
+                                <div class="pin pin-special">27<span class="pin-label">ID_SD (EEPROM)</span></div>
+                                <div class="pin pin-special">28<span class="pin-label">ID_SC (EEPROM)</span></div>
+                            </div>
+                            <!-- Pins 29-30 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">29<span class="pin-label">GPIO5</span></div>
+                                <div class="pin pin-gnd">30<span class="pin-label">GND</span></div>
+                            </div>
+                            <!-- Pins 31-32 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">31<span class="pin-label">GPIO6</span></div>
+                                <div class="pin pin-unused">32<span class="pin-label">GPIO12</span></div>
+                            </div>
+                            <!-- Pins 33-34 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">33<span class="pin-label">GPIO13</span></div>
+                                <div class="pin pin-gnd">34<span class="pin-label">GND</span></div>
+                            </div>
+                            <!-- Pins 35-36 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">35<span class="pin-label">GPIO19</span></div>
+                                <div class="pin pin-gpio-used">36<span class="pin-label">GPIO16 → RGB BLUE</span></div>
+                            </div>
+                            <!-- Pins 37-38 -->
+                            <div class="pin-row">
+                                <div class="pin pin-unused">37<span class="pin-label">GPIO26</span></div>
+                                <div class="pin pin-unused">38<span class="pin-label">GPIO20</span></div>
+                            </div>
+                            <!-- Pins 39-40 -->
+                            <div class="pin-row">
+                                <div class="pin pin-gnd">39<span class="pin-label">GND</span></div>
+                                <div class="pin pin-unused">40<span class="pin-label">GPIO21</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color pin-5v"></div>
+                        <span>5V Power</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pin-3v3"></div>
+                        <span>3.3V Power</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pin-gnd"></div>
+                        <span>GND</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pin-gpio-used"></div>
+                        <span>GPIO Usado</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pin-gpio"></div>
+                        <span>GPIO Disponible</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pin-special"></div>
+                        <span>Función Especial</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Components Section -->
+            <div style="flex: 1; min-width: 350px;">
+                <div class="components-grid">
+                    
+                    <!-- Display Touch -->
+                    <div class="component-card display">
+                        <div class="component-name">
+                            <span class="component-icon">🖥️</span>
+                            Display Touch (7" o similar)
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>Video</span>
+                                <span class="pin-number">HDMI</span>
+                            </li>
+                            <li>
+                                <span>Touch (datos)</span>
+                                <span class="pin-number">USB-A</span>
+                            </li>
+                            <li>
+                                <span>Alimentación</span>
+                                <span class="pin-number">USB / 5V externo</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Power -->
+                    <div class="component-card power">
+                        <div class="component-name">
+                            <span class="component-icon">🔋</span>
+                            Alimentación
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>Raspberry Pi</span>
+                                <span class="pin-number">USB-C 5V/3A</span>
+                            </li>
+                            <li>
+                                <span>Servo (ext.)</span>
+                                <span class="pin-number">5-6V/2A</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- HC-SR04 -->
+                    <div class="component-card sensor">
+                        <div class="component-name">
+                            <span class="component-icon">📡</span>
+                            Sensor HC-SR04
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>VCC</span>
+                                <span class="pin-number">Pin 2 (5V)</span>
+                            </li>
+                            <li>
+                                <span>TRIG</span>
+                                <span class="pin-number">Pin 11 (GPIO17)</span>
+                            </li>
+                            <li>
+                                <span>ECHO</span>
+                                <span class="pin-number">Pin 13 (GPIO27)</span>
+                            </li>
+                            <li>
+                                <span>GND</span>
+                                <span class="pin-number">Pin 6 (GND)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Servo MG996R -->
+                    <div class="component-card servo">
+                        <div class="component-name">
+                            <span class="component-icon">🔄</span>
+                            Servo MG996R
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>VCC (Rojo)</span>
+                                <span class="pin-number">5V Externo ⚡</span>
+                            </li>
+                            <li>
+                                <span>Signal (Naranja)</span>
+                                <span class="pin-number">Pin 12 (GPIO18)</span>
+                            </li>
+                            <li>
+                                <span>GND (Marrón)</span>
+                                <span class="pin-number">Pin 14 (GND)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Buzzer -->
+                    <div class="component-card buzzer">
+                        <div class="component-name">
+                            <span class="component-icon">🔊</span>
+                            Buzzer 3V
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>+ (Positivo)</span>
+                                <span class="pin-number">Pin 16 (GPIO23)</span>
+                            </li>
+                            <li>
+                                <span>- (Negativo)</span>
+                                <span class="pin-number">Pin 20 (GND)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- RGB LED Strip -->
+                    <div class="component-card rgb">
+                        <div class="component-name">
+                            <span class="component-icon">💡</span>
+                            Tira RGB 5V (Ánodo Común)
+                        </div>
+                        <ul class="pin-list">
+                            <li>
+                                <span>Común (+5V)</span>
+                                <span class="pin-number">Pin 4 (5V)</span>
+                            </li>
+                            <li>
+                                <span>R (Red)</span>
+                                <span class="pin-number">Pin 18 (GPIO24)</span>
+                            </li>
+                            <li>
+                                <span>G (Green)</span>
+                                <span class="pin-number">Pin 22 (GPIO25)</span>
+                            </li>
+                            <li>
+                                <span>B (Blue)</span>
+                                <span class="pin-number">Pin 36 (GPIO16)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wiring Diagram -->
+        <div class="connection-visual">
+            <div class="section-title">Conexiones de Cables</div>
+            
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Pin Componente</th>
+                        <th>Pin Raspberry Pi</th>
+                        <th>GPIO</th>
+                        <th>Color Sugerido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="4">HC-SR04</td>
+                        <td>VCC</td>
+                        <td>Pin 2</td>
+                        <td>5V</td>
+                        <td><div class="wire-color wire-red" style="display:inline-block"></div> Rojo</td>
+                    </tr>
+                    <tr>
+                        <td>TRIG</td>
+                        <td>Pin 11</td>
+                        <td>GPIO17</td>
+                        <td><div class="wire-color wire-yellow" style="display:inline-block"></div> Amarillo</td>
+                    </tr>
+                    <tr>
+                        <td>ECHO</td>
+                        <td>Pin 13</td>
+                        <td>GPIO27</td>
+                        <td><div class="wire-color wire-green" style="display:inline-block"></div> Verde</td>
+                    </tr>
+                    <tr>
+                        <td>GND</td>
+                        <td>Pin 6</td>
+                        <td>GND</td>
+                        <td><div class="wire-color wire-black" style="display:inline-block"></div> Negro</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">Servo MG996R</td>
+                        <td>VCC (Rojo)</td>
+                        <td colspan="2">⚡ Fuente Externa 5-6V</td>
+                        <td><div class="wire-color wire-red" style="display:inline-block"></div> Rojo</td>
+                    </tr>
+                    <tr>
+                        <td>Signal (Naranja)</td>
+                        <td>Pin 12</td>
+                        <td>GPIO18</td>
+                        <td><div class="wire-color wire-orange" style="display:inline-block"></div> Naranja</td>
+                    </tr>
+                    <tr>
+                        <td>GND (Marrón)</td>
+                        <td>Pin 14</td>
+                        <td>GND</td>
+                        <td><div class="wire-color wire-black" style="display:inline-block"></div> Negro/Marrón</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">Buzzer 3V</td>
+                        <td>+ (Positivo)</td>
+                        <td>Pin 16</td>
+                        <td>GPIO23</td>
+                        <td><div class="wire-color wire-red" style="display:inline-block"></div> Rojo</td>
+                    </tr>
+                    <tr>
+                        <td>- (Negativo)</td>
+                        <td>Pin 20</td>
+                        <td>GND</td>
+                        <td><div class="wire-color wire-black" style="display:inline-block"></div> Negro</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4">Tira RGB</td>
+                        <td>Común (Ánodo)</td>
+                        <td>Pin 4</td>
+                        <td>5V</td>
+                        <td><div class="wire-color wire-white" style="display:inline-block"></div> Blanco</td>
+                    </tr>
+                    <tr>
+                        <td>R (Red)</td>
+                        <td>Pin 18</td>
+                        <td>GPIO24</td>
+                        <td><div class="wire-color wire-red" style="display:inline-block"></div> Rojo</td>
+                    </tr>
+                    <tr>
+                        <td>G (Green)</td>
+                        <td>Pin 22</td>
+                        <td>GPIO25</td>
+                        <td><div class="wire-color wire-green" style="display:inline-block"></div> Verde</td>
+                    </tr>
+                    <tr>
+                        <td>B (Blue)</td>
+                        <td>Pin 36</td>
+                        <td>GPIO16</td>
+                        <td><div class="wire-color wire-blue" style="display:inline-block"></div> Azul</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">Display Touch</td>
+                        <td>Video</td>
+                        <td colspan="2">Puerto HDMI</td>
+                        <td>Cable HDMI</td>
+                    </tr>
+                    <tr>
+                        <td>Touch USB</td>
+                        <td colspan="2">Puerto USB-A</td>
+                        <td>Cable USB</td>
+                    </tr>
+                    <tr>
+                        <td>Alimentación</td>
+                        <td colspan="2">USB o 5V externo</td>
+                        <td>Cable USB/DC</td>
+                    </tr>
+                    <tr>
+                        <td>Raspberry Pi</td>
+                        <td>Alimentación</td>
+                        <td colspan="2">Puerto USB-C</td>
+                        <td>5V 3A mínimo</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Visual Schematic -->
+        <div class="raspberry-section" style="margin-top: 20px;">
+            <div class="section-title">Esquema Visual de Conexiones</div>
+            <pre style="font-family: monospace; font-size: 12px; line-height: 1.4; overflow-x: auto; padding: 15px; background: #1a1a2e; border-radius: 10px;">
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              RASPBERRY PI 4 MODEL B                                      │
+│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
+│  │  ┌──────┐   ┌──────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────┐   │    │
+│  │  │ USB  │   │ USB  │   │   USB    │   │   USB    │   │ Ethernet │   │ USB-C│   │    │
+│  │  │  3.0 │   │  3.0 │   │   2.0    │   │   2.0    │   │   RJ45   │   │ PWR  │   │    │
+│  │  └───┬──┘   └──────┘   └────┬─────┘   └──────────┘   └──────────┘   └───┬──┘   │    │
+│  │      │                      │                                            │      │    │
+│  │      │ Display Touch        │                                            │      │    │
+│  │      │ (datos táctil)       │                                   ┌────────┴──────┐    │
+│  │      └──────────────────────┘                                   │ Fuente 5V 3A  │    │
+│  │                                                                 │  (Obligatorio)│    │
+│  │   GPIO HEADER                                                   └───────────────┘    │
+│  │   ┌─────────────────────────────────────┐                                      │    │
+│  │   │ 1[3V3]  [5V ]2 ◄─── HC-SR04 VCC     │                                      │    │
+│  │   │ 3[SDA]  [5V ]4 ◄─── RGB Común (+)   │                                      │    │
+│  │   │ 5[SCL]  [GND]6 ◄─── HC-SR04 GND     │                                      │    │
+│  │   │ 7[GP4]  [TX ]8                      │      ┌─────────────────────────┐     │    │
+│  │   │ 9[GND]  [RX ]10                     │      │     DISPLAY TOUCH       │     │    │
+│  │   │11[GP17] [G18]12 ◄─── Servo Signal   │      │    ┌───────────────┐    │     │    │
+│  │   │13[GP27] [GND]14 ◄─── Servo GND      │      │    │               │    │     │    │
+│  │   │15[G22]  [G23]16 ◄─── Buzzer +       │      │    │   PANTALLA    │    │     │    │
+│  │   │17[3V3]  [G24]18 ◄─── RGB Red        │      │    │    TÁCTIL     │    │     │    │
+│  │   │19[MOSI] [GND]20 ◄─── Buzzer -       │      │    │    7 inch     │    │     │    │
+│  │   │21[MISO] [G25]22 ◄─── RGB Green      │      │    │               │    │     │    │
+│  │   │23[SCLK] [CE0]24                     │      │    └───────────────┘    │     │    │
+│  │   │25[GND]  [CE1]26                     │      │  [HDMI]──────┐          │     │    │
+│  │   │27[ID_SD][ID_SC]28                   │      │  [USB Touch]─┼──────┐   │     │    │
+│  │   │29[GP5]  [GND]30                     │      │  [USB Power]─┼────┐ │   │     │    │
+│  │   │31[GP6]  [G12]32                     │      └──────────────┼────┼─┼───┘     │    │
+│  │   │33[G13]  [GND]34                     │                     │    │ │         │    │
+│  │   │35[G19]  [G16]36 ◄─── RGB Blue       │                     │    │ │         │    │
+│  │   │37[G26]  [G20]38                     │                     │    │ │         │    │
+│  │   │39[GND]  [G21]40                     │                     │    │ │         │    │
+│  │   └───────────────────────┬─────────────┘                     │    │ │         │    │
+│  │                           │                                   │    │ │         │    │
+│  │   ┌───────────────────────┼───────────────────────────────────┼────┘ │         │    │
+│  │   │        HDMI PORT      │                                   │      │         │    │
+│  │   └───────────────────────┴───────────────────────────────────┘      │         │    │
+│  │                                                                       │         │    │
+│  └───────────────────────────────────────────────────────────────────────┴─────────┘    │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                    COMPONENTES EXTERNOS
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │   ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐ │
+    │   │  HC-SR04    │    │  MG996R     │    │    TIRA RGB 5V      │ │
+    │   │ ┌─────────┐ │    │ ┌─────────┐ │    │   (Ánodo Común)     │ │
+    │   │ │ ◉     ◉ │ │    │ │  ┌───┐  │ │    │  ═══════════════    │ │
+    │   │ │ ULTRA   │ │    │ │  │SRV│  │ │    │  🔴🟢🔵 LED Strip   │ │
+    │   │ │ SONIC   │ │    │ │  └─┬─┘  │ │    │                     │ │
+    │   │ └─────────┘ │    │ │    │    │ │    │  +5V  R   G   B     │ │
+    │   │ VCC TRG ECH GND  │ │ VCC SIG GND │    │   │   │   │   │     │ │
+    │   │  │   │   │   │   │ │  │   │   │  │    │   │   │   │   │     │ │
+    │   └──┼───┼───┼───┼───┘ └──┼───┼───┼──┘    └───┼───┼───┼───┼─────┘ │
+    │      │   │   │   │        │   │   │           │   │   │   │       │
+    │      │   │   │   │        │   │   │           │   │   │   │       │
+    │   5V─┘   │   │   └──GND   │   │   └──GND   5V─┘   │   │   │       │
+    │      GPIO17 GPIO27        │ GPIO18           GPIO24 │ GPIO16      │
+    │                           │                    GPIO25             │
+    │                     ⚡ FUENTE                                      │
+    │                     EXTERNA                                       │
+    │                      5-6V                                         │
+    │                                                                   │
+    │   ┌─────────────┐                                                │
+    │   │   BUZZER    │                                                │
+    │   │    3V       │                                                │
+    │   │  ┌─────┐    │                                                │
+    │   │  │ (+) │    │                                                │
+    │   │  └──┬──┘    │                                                │
+    │   │     │   │   │                                                │
+    │   │   GPIO23 GND│                                                │
+    │   └─────────────┘                                                │
+    │                                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+        
+        <!-- Important Notes -->
+        <div class="notes">
+            <h3>⚠️ Notas Importantes</h3>
+            <ul>
+                <li><strong>Servo MG996R:</strong> Requiere fuente de alimentación externa (5-6V, 2A mínimo). NO conectar VCC directamente a la Raspberry Pi, puede dañarla.</li>
+                <li><strong>HC-SR04:</strong> Funciona a 5V. El pin ECHO envía 5V, pero GPIO27 puede tolerarlo (aunque se recomienda divisor de voltaje).</li>
+                <li><strong>Tira RGB:</strong> Es de <strong>ánodo común</strong> (5V común). La lógica está invertida: GPIO LOW = LED encendido.</li>
+                <li><strong>GND común:</strong> Conectar el GND de la fuente externa del servo al GND de la Raspberry Pi para referencia común.</li>
+                <li><strong>Display Touch:</strong> Algunos displays requieren alimentación USB separada además del HDMI.</li>
+                <li><strong>Alimentación Raspberry Pi:</strong> Usar fuente oficial de 5V/3A para evitar problemas de bajo voltaje.</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p>Sistema de Detección de Daltonismo - Manos Para la Vista</p>
+            <p>Diseño Mecatrónico | 2024</p>
+        </div>
+    </div>
+</body>
+</html>
