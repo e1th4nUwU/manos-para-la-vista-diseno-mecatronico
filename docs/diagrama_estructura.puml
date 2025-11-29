@@ -1,0 +1,46 @@
+@startuml Estructura_Codigo
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Estructura del Codigo - Test de Daltonismo
+
+package "src/" #EEEEEE {
+    [**dalton.py**\nPrograma principal\nGUI + GPIO] as dalton
+    
+    package "lib/" #DDDDDD {
+        [Notification.py\nReportes PDF] as notif
+    }
+}
+
+package "scripts/" #EEEEEE {
+    [instalar_dependencias.sh] as install
+    [test_buzzer.py] as buzzer
+}
+
+package "assets/images/" #EEEEEE {
+    [Laminas Ishihara] as imgs
+}
+
+dalton --> notif : importa
+dalton --> imgs : carga
+
+note right of dalton
+  - Interfaz Tkinter
+  - Control GPIO
+  - Test colores
+  - Test Ishihara
+end note
+
+@enduml
+  | <#FCE4EC> | Recursos (imagenes) |
+  | <#E1F5FE> | Documentacion |
+  | <#F3E5F5> | Tests unitarios |
+endlegend
+
+footer Proyecto Mecatronico - UNAM 2025
+
+@enduml

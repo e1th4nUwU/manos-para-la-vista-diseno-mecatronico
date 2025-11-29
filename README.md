@@ -1,6 +1,8 @@
 # 👁️ Sistema de Detección de Daltonismo - Manos Para la Vista
 
-![Logo](img/logo.png)
+<p align="center">
+  <img src="img/logo.png" alt="Logo" width="200">
+</p>
 
 Sistema profesional de detección de daltonismo para Raspberry Pi con hardware especializado y reportes automáticos vía Telegram.
 
